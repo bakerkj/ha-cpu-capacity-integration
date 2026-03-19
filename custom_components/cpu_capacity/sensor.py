@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CpuCapacityEntryData
-from .const import DOMAIN
+from .const import DOMAIN, SUMMARY_SENSOR_NAME
 from .coordinator import CpuCapacityCoordinator
 
 
@@ -208,7 +208,7 @@ class CpuCapacitySensor(CpuCapacityBaseSensor):
 
 
 class CpuCapacitySummarySensor(CpuCapacityBaseSensor):
-    _attr_name = "Summary"
+    _attr_name = SUMMARY_SENSOR_NAME
     _attr_icon = "mdi:table"
 
     def __init__(

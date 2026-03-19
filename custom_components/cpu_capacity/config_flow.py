@@ -17,6 +17,10 @@ from .const import (
     DEFAULT_PUBLISH_INTERVAL_SECONDS,
     DEFAULT_SAMPLE_INTERVAL_SECONDS,
     DOMAIN,
+    MAX_PUBLISH_INTERVAL,
+    MAX_SAMPLE_INTERVAL,
+    MIN_PUBLISH_INTERVAL,
+    MIN_SAMPLE_INTERVAL,
     UNIQUE_ID,
 )
 
@@ -27,11 +31,17 @@ def _build_schema(sample_default: float, publish_default: float) -> vol.Schema:
             vol.Required(
                 CONF_SAMPLE_INTERVAL_SECONDS,
                 default=float(sample_default),
-            ): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=10.0)),
+            ): vol.All(
+                vol.Coerce(float),
+                vol.Range(min=MIN_SAMPLE_INTERVAL, max=MAX_SAMPLE_INTERVAL),
+            ),
             vol.Required(
                 CONF_PUBLISH_INTERVAL_SECONDS,
                 default=float(publish_default),
-            ): vol.All(vol.Coerce(float), vol.Range(min=1.0, max=3600.0)),
+            ): vol.All(
+                vol.Coerce(float),
+                vol.Range(min=MIN_PUBLISH_INTERVAL, max=MAX_PUBLISH_INTERVAL),
+            ),
         }
     )
 

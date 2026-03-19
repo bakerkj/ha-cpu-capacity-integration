@@ -15,6 +15,13 @@ DEFAULT_NAME = "CPU Capacity"
 
 UNIQUE_ID = "cpu_capacity_singleton"
 
+MIN_SAMPLE_INTERVAL = 0.1
+MAX_SAMPLE_INTERVAL = 10.0
+MIN_PUBLISH_INTERVAL = 1.0
+MAX_PUBLISH_INTERVAL = 3600.0
+STALE_DATA_TIMEOUT_MULTIPLIER = 3.0
+SUMMARY_SENSOR_NAME = "Summary"
+
 EPP_PATH_TEMPLATE = (
     "/sys/devices/system/cpu/cpu{cpu}/cpufreq/energy_performance_preference"
 )

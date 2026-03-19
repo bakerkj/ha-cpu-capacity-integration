@@ -18,7 +18,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, EPB_PATH_TEMPLATE, EPP_PATH_TEMPLATE
+from .const import (
+    DOMAIN,
+    EPB_PATH_TEMPLATE,
+    EPP_PATH_TEMPLATE,
+    STALE_DATA_TIMEOUT_MULTIPLIER,
+)
 
 WINDOW_SECONDS: dict[str, float] = {
     "1m": 60.0,
@@ -141,7 +146,7 @@ def _parse_proc_cpuinfo_mhz_map() -> dict[int, float]:
                 if line.lower().startswith("cpu mhz") and current_cpu is not None:
                     _, value = line.split(":", 1)
                     out[current_cpu] = float(value.strip())
-    except Exception:
+    except (OSError, ValueError):
         return {}
 
     return out
@@ -157,6 +162,9 @@ def _read_current_mhz(cpu_ids: list[int]) -> dict[int, float]:
         if text and text.isdigit():
             out[cpu] = float(int(text)) / 1000.0
         else:
+            logging.getLogger(__name__).debug(
+                "cpu%s: unable to read current frequency from %s", cpu, freq_file
+            )
             missing.append(cpu)
 
     if missing:
@@ -337,14 +345,23 @@ class CpuCapacitySampler:
         async with self._lock:
             try:
                 await self.hass.async_add_executor_job(self._take_sample_sync)
-            except Exception as err:  # noqa: BLE001
+            except (OSError, ValueError) as err:
                 self.logger.warning("CPU sampling failed: %s", err)
+            except Exception as err:  # noqa: BLE001
+                self.logger.error(
+                    "Unexpected error during CPU sampling: %s", err, exc_info=True
+                )
 
     async def async_get_snapshot(self) -> dict[str, Any]:
         async with self._lock:
             return await self.hass.async_add_executor_job(self._build_snapshot_sync)
 
     def _initialize_sync(self) -> None:
+        if not os.path.exists("/proc/stat"):
+            raise RuntimeError(
+                "CPU Capacity integration requires Linux /proc/stat. "
+                "This integration only works on Linux systems."
+            )
         self._prev_totals = _read_proc_stat_totals()
         self._cpu_ids = sorted(self._prev_totals.keys())
         if not self._cpu_ids:
@@ -463,7 +480,9 @@ class CpuCapacityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if last_sample_epoch <= 0.0:
             raise UpdateFailed("No sample timestamp available")
 
-        stale_timeout = max(5.0, self.sampler.publish_interval_seconds * 3.0)
+        stale_timeout = max(
+            5.0, self.sampler.publish_interval_seconds * STALE_DATA_TIMEOUT_MULTIPLIER
+        )
         age = time.time() - last_sample_epoch
         if age > stale_timeout:
             raise UpdateFailed(
