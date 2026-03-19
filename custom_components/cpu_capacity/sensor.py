@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CpuCapacityEntryData
 from .const import DOMAIN, SUMMARY_SENSOR_NAME
-from .coordinator import CpuCapacityCoordinator
+from .coordinator import CpuCapacityCoordinator, CpuSnapshot
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,14 +124,10 @@ def _cpu_device_info(entry_id: str, cpu: int) -> DeviceInfo:
 def _cpu_snapshot(
     coordinator: CpuCapacityCoordinator,
     cpu: int,
-) -> dict[str, Any] | None:
-    cpus = coordinator.data.get("cpus") if coordinator.data else None
-    if not isinstance(cpus, dict):
+) -> CpuSnapshot | None:
+    if not coordinator.data:
         return None
-    data = cpus.get(cpu)
-    if not isinstance(data, dict):
-        return None
-    return data
+    return coordinator.data["cpus"].get(cpu)
 
 
 def _normalize_attribute_key(raw_key: str) -> str:
@@ -169,7 +165,7 @@ class CpuCapacityBaseSensor(CoordinatorEntity[CpuCapacityCoordinator], SensorEnt
         self._attr_device_info = _cpu_device_info(entry_id, cpu)
 
     @property
-    def _cpu_data(self) -> dict[str, Any] | None:
+    def _cpu_data(self) -> CpuSnapshot | None:
         return _cpu_snapshot(self.coordinator, self._cpu)
 
     @property

@@ -12,7 +12,7 @@ import time
 from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TypedDict
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -30,6 +30,30 @@ WINDOW_SECONDS: dict[str, float] = {
     "5m": 300.0,
     "15m": 900.0,
 }
+
+
+class CpuSnapshot(TypedDict):
+    supports_capacity_adjusted: bool
+    max_mhz: float | None
+    epp: str | None
+    epb: int | None
+    mhz_1m: float | None
+    mhz_5m: float | None
+    mhz_15m: float | None
+    load_pct_1m: float | None
+    load_pct_5m: float | None
+    load_pct_15m: float | None
+    capacity_adjusted_load_pct_1m: float | None
+    capacity_adjusted_load_pct_5m: float | None
+    capacity_adjusted_load_pct_15m: float | None
+
+
+class CoordinatorSnapshot(TypedDict):
+    sample_count: int
+    last_sample_epoch: float
+    sample_interval_seconds: float
+    publish_interval_seconds: float
+    cpus: dict[int, CpuSnapshot]
 
 
 class RollingWindow:
@@ -352,7 +376,7 @@ class CpuCapacitySampler:
                     "Unexpected error during CPU sampling: %s", err, exc_info=True
                 )
 
-    async def async_get_snapshot(self) -> dict[str, Any]:
+    async def async_get_snapshot(self) -> CoordinatorSnapshot:
         async with self._lock:
             return await self.hass.async_add_executor_job(self._build_snapshot_sync)
 
@@ -418,43 +442,53 @@ class CpuCapacitySampler:
         self._sample_count += 1
         self._last_sample_epoch = time.time()
 
-    def _build_snapshot_sync(self) -> dict[str, Any]:
+    def _build_snapshot_sync(self) -> CoordinatorSnapshot:
         epp_by_cpu = {cpu: _read_epp(cpu) for cpu in self._cpu_ids}
         epb_by_cpu = {cpu: _read_epb(cpu) for cpu in self._cpu_ids}
 
-        cpu_data: dict[int, dict[str, Any]] = {}
+        cpu_data: dict[int, CpuSnapshot] = {}
         for cpu in self._cpu_ids:
             averages = self._averages_by_cpu[cpu]
             supports_capacity = self._supports_capacity_adjusted.get(cpu, False)
 
-            row: dict[str, Any] = {
-                "supports_capacity_adjusted": supports_capacity,
-                "max_mhz": self._max_mhz_by_cpu.get(cpu),
-                "epp": epp_by_cpu.get(cpu),
-                "epb": epb_by_cpu.get(cpu),
-            }
-
-            for window in ("1m", "5m", "15m"):
-                row[f"mhz_{window}"] = averages.mean("mhz", window)
-                row[f"load_pct_{window}"] = averages.mean("load_pct", window)
-                row[f"capacity_adjusted_load_pct_{window}"] = (
-                    averages.mean("capacity_adjusted_load_pct", window)
-                    if supports_capacity
-                    else None
+            cpu_data[cpu] = CpuSnapshot(
+                supports_capacity_adjusted=supports_capacity,
+                max_mhz=self._max_mhz_by_cpu.get(cpu),
+                epp=epp_by_cpu.get(cpu),
+                epb=epb_by_cpu.get(cpu),
+                mhz_1m=averages.mean("mhz", "1m"),
+                mhz_5m=averages.mean("mhz", "5m"),
+                mhz_15m=averages.mean("mhz", "15m"),
+                load_pct_1m=averages.mean("load_pct", "1m"),
+                load_pct_5m=averages.mean("load_pct", "5m"),
+                load_pct_15m=averages.mean("load_pct", "15m"),
+                capacity_adjusted_load_pct_1m=averages.mean(
+                    "capacity_adjusted_load_pct", "1m"
                 )
+                if supports_capacity
+                else None,
+                capacity_adjusted_load_pct_5m=averages.mean(
+                    "capacity_adjusted_load_pct", "5m"
+                )
+                if supports_capacity
+                else None,
+                capacity_adjusted_load_pct_15m=averages.mean(
+                    "capacity_adjusted_load_pct", "15m"
+                )
+                if supports_capacity
+                else None,
+            )
 
-            cpu_data[cpu] = row
-
-        return {
-            "sample_count": self._sample_count,
-            "last_sample_epoch": self._last_sample_epoch,
-            "sample_interval_seconds": self._sample_interval_seconds,
-            "publish_interval_seconds": self._publish_interval_seconds,
-            "cpus": cpu_data,
-        }
+        return CoordinatorSnapshot(
+            sample_count=self._sample_count,
+            last_sample_epoch=self._last_sample_epoch,
+            sample_interval_seconds=self._sample_interval_seconds,
+            publish_interval_seconds=self._publish_interval_seconds,
+            cpus=cpu_data,
+        )
 
 
-class CpuCapacityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class CpuCapacityCoordinator(DataUpdateCoordinator[CoordinatorSnapshot]):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -469,21 +503,19 @@ class CpuCapacityCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=sampler.publish_interval_seconds),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> CoordinatorSnapshot:
         snapshot = await self.sampler.async_get_snapshot()
 
-        sample_count = int(snapshot.get("sample_count", 0))
-        if sample_count <= 0:
+        if snapshot["sample_count"] <= 0:
             raise UpdateFailed("No samples collected yet")
 
-        last_sample_epoch = float(snapshot.get("last_sample_epoch", 0.0) or 0.0)
-        if last_sample_epoch <= 0.0:
+        if snapshot["last_sample_epoch"] <= 0.0:
             raise UpdateFailed("No sample timestamp available")
 
         stale_timeout = max(
             5.0, self.sampler.publish_interval_seconds * STALE_DATA_TIMEOUT_MULTIPLIER
         )
-        age = time.time() - last_sample_epoch
+        age = time.time() - snapshot["last_sample_epoch"]
         if age > stale_timeout:
             raise UpdateFailed(
                 (f"CPU sample data is stale ({age:.1f}s > {stale_timeout:.1f}s)")
