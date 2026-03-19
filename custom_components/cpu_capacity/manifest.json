@@ -5,6 +5,7 @@
   "config_flow": true,
   "documentation": "https://github.com/bakerkj/hass-apps",
   "issue_tracker": "https://github.com/bakerkj/hass-apps/issues",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "codeowners": ["@bakerkj"]
 }

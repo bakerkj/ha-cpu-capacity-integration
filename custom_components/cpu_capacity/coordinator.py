@@ -393,11 +393,11 @@ class CpuCapacitySampler:
             for window in ("1m", "5m", "15m"):
                 row[f"mhz_{window}"] = averages.mean("mhz", window)
                 row[f"load_pct_{window}"] = averages.mean("load_pct", window)
-                if supports_capacity:
-                    row[f"capacity_adjusted_load_pct_{window}"] = averages.mean(
-                        "capacity_adjusted_load_pct",
-                        window,
-                    )
+                row[f"capacity_adjusted_load_pct_{window}"] = (
+                    averages.mean("capacity_adjusted_load_pct", window)
+                    if supports_capacity
+                    else None
+                )
 
             cpu_data[cpu] = row
 
