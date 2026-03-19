@@ -1,10 +1,10 @@
 {
   "domain": "cpu_capacity",
   "name": "CPU Capacity",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "config_flow": true,
-  "documentation": "https://github.com/bakerkj/hass-apps",
-  "issue_tracker": "https://github.com/bakerkj/hass-apps/issues",
+  "documentation": "https://github.com/bakerkj/ha-cpu-capacity-integration",
+  "issue_tracker": "https://github.com/bakerkj/ha-cpu-capacity-integration/issues",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "codeowners": ["@bakerkj"]
