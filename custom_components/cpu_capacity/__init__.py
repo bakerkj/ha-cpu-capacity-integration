@@ -64,26 +64,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sample_interval_seconds=sample_interval,
         publish_interval_seconds=publish_interval,
     )
-
-    await sampler.async_start()
-
     coordinator = CpuCapacityCoordinator(hass, logger, sampler)
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = CpuCapacityEntryData(
-        sampler=sampler,
-        coordinator=coordinator,
-    )
-
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    entry_added = False
 
     try:
+        await sampler.async_start()
+        await coordinator.async_config_entry_first_refresh()
+
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = CpuCapacityEntryData(
+            sampler=sampler,
+            coordinator=coordinator,
+        )
+        entry_added = True
+
+        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
         await sampler.async_stop()
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+        if entry_added:
+            hass.data[DOMAIN].pop(entry.entry_id, None)
+            if not hass.data[DOMAIN]:
+                hass.data.pop(DOMAIN)
         raise
 
     return True

@@ -32,6 +32,8 @@ class CpuMetricDescription(SensorEntityDescription):
 
 def _build_descriptions(
     supports_capacity_adjusted: bool,
+    supports_epp: bool,
+    supports_epb: bool,
 ) -> list[CpuMetricDescription]:
     descriptions: list[CpuMetricDescription] = []
 
@@ -85,25 +87,27 @@ def _build_descriptions(
             suggested_display_precision=0,
         )
     )
-    descriptions.append(
-        CpuMetricDescription(
-            key="epp",
-            metric_key="epp",
-            name="Energy Performance Preference",
-            icon="mdi:tune-vertical",
-            entity_category=EntityCategory.DIAGNOSTIC,
+    if supports_epp:
+        descriptions.append(
+            CpuMetricDescription(
+                key="epp",
+                metric_key="epp",
+                name="Energy Performance Preference",
+                icon="mdi:tune-vertical",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
         )
-    )
-    descriptions.append(
-        CpuMetricDescription(
-            key="epb",
-            metric_key="epb",
-            name="Energy Performance Bias",
-            icon="mdi:tune-vertical",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            suggested_display_precision=0,
+    if supports_epb:
+        descriptions.append(
+            CpuMetricDescription(
+                key="epb",
+                metric_key="epb",
+                name="Energy Performance Bias",
+                icon="mdi:tune-vertical",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                suggested_display_precision=0,
+            )
         )
-    )
 
     return descriptions
 
@@ -248,7 +252,12 @@ async def async_setup_entry(
     for cpu in entry_data.sampler.cpu_ids:
         entities.append(CpuCapacitySummarySensor(entry.entry_id, coordinator, cpu))
 
-        descriptions = _build_descriptions(supports.get(cpu, False))
+        cpu_data = _cpu_snapshot(coordinator, cpu) or {}
+        descriptions = _build_descriptions(
+            supports_capacity_adjusted=supports.get(cpu, False),
+            supports_epp=cpu_data.get("epp") is not None,
+            supports_epb=cpu_data.get("epb") is not None,
+        )
         for description in descriptions:
             entities.append(
                 CpuCapacitySensor(entry.entry_id, coordinator, cpu, description)

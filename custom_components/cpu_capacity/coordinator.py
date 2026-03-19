@@ -287,13 +287,13 @@ class CpuCapacitySampler:
                 return
             self._sample_task = self.hass.async_create_task(self._async_take_sample())
 
+        await self._async_take_sample()
+
         self._unsub_sample = async_track_time_interval(
             self.hass,
             _schedule_sample,
             timedelta(seconds=self._sample_interval_seconds),
         )
-
-        self._sample_task = self.hass.async_create_task(self._async_take_sample())
 
     async def async_stop(self) -> None:
         self._running = False
