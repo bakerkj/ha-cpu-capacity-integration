@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import os
 import re
 import time
 from collections import deque
@@ -17,7 +18,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, EPB_PATH_TEMPLATE, EPP_PATH_TEMPLATE
 
 WINDOW_SECONDS: dict[str, float] = {
     "1m": 60.0,
@@ -206,19 +207,33 @@ def _read_max_mhz(cpu_ids: list[int], logger: logging.Logger) -> dict[int, float
     return out
 
 
+def _epp_path(cpu: int) -> str:
+    return EPP_PATH_TEMPLATE.format(cpu=cpu)
+
+
+def _epb_path(cpu: int) -> str:
+    return EPB_PATH_TEMPLATE.format(cpu=cpu)
+
+
 def _read_epp(cpu: int) -> Optional[str]:
-    return _safe_read_text(
-        f"/sys/devices/system/cpu/cpu{cpu}/cpufreq/energy_performance_preference"
-    )
+    return _safe_read_text(_epp_path(cpu))
 
 
 def _read_epb(cpu: int) -> Optional[int]:
-    text = _safe_read_text(f"/sys/devices/system/cpu/cpu{cpu}/power/energy_perf_bias")
+    text = _safe_read_text(_epb_path(cpu))
     if text is None:
         return None
     if re.fullmatch(r"[-+]?\d+", text):
         return int(text)
     return None
+
+
+def _supports_epp(cpu: int) -> bool:
+    return os.path.exists(_epp_path(cpu))
+
+
+def _supports_epb(cpu: int) -> bool:
+    return os.path.exists(_epb_path(cpu))
 
 
 class CpuCapacitySampler:
@@ -246,6 +261,8 @@ class CpuCapacitySampler:
         self._prev_totals: dict[int, tuple[int, int]] = {}
         self._max_mhz_by_cpu: dict[int, float] = {}
         self._supports_capacity_adjusted: dict[int, bool] = {}
+        self._supports_epp: dict[int, bool] = {}
+        self._supports_epb: dict[int, bool] = {}
         self._averages_by_cpu: dict[int, CpuRollingAverages] = {}
 
         self._sample_count = 0
@@ -263,6 +280,14 @@ class CpuCapacitySampler:
     @property
     def supports_capacity_adjusted(self) -> dict[int, bool]:
         return dict(self._supports_capacity_adjusted)
+
+    @property
+    def supports_epp(self) -> dict[int, bool]:
+        return dict(self._supports_epp)
+
+    @property
+    def supports_epb(self) -> dict[int, bool]:
+        return dict(self._supports_epb)
 
     @property
     def sample_interval_seconds(self) -> float:
@@ -329,6 +354,8 @@ class CpuCapacitySampler:
         self._supports_capacity_adjusted = {
             cpu: self._max_mhz_by_cpu.get(cpu, 0.0) > 0.0 for cpu in self._cpu_ids
         }
+        self._supports_epp = {cpu: _supports_epp(cpu) for cpu in self._cpu_ids}
+        self._supports_epb = {cpu: _supports_epb(cpu) for cpu in self._cpu_ids}
 
         self._averages_by_cpu = {
             cpu: CpuRollingAverages(self._window_sizes) for cpu in self._cpu_ids

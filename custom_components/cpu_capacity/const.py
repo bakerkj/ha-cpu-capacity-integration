@@ -14,3 +14,8 @@ DEFAULT_PUBLISH_INTERVAL_SECONDS = 15.0
 DEFAULT_NAME = "CPU Capacity"
 
 UNIQUE_ID = "cpu_capacity_singleton"
+
+EPP_PATH_TEMPLATE = (
+    "/sys/devices/system/cpu/cpu{cpu}/cpufreq/energy_performance_preference"
+)
+EPB_PATH_TEMPLATE = "/sys/devices/system/cpu/cpu{cpu}/power/energy_perf_bias"

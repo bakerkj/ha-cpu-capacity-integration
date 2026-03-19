@@ -246,17 +246,18 @@ async def async_setup_entry(
 ) -> None:
     entry_data: CpuCapacityEntryData = hass.data[DOMAIN][entry.entry_id]
     coordinator = entry_data.coordinator
-    supports = entry_data.sampler.supports_capacity_adjusted
+    supports_capacity_adjusted = entry_data.sampler.supports_capacity_adjusted
+    supports_epp = entry_data.sampler.supports_epp
+    supports_epb = entry_data.sampler.supports_epb
 
     entities: list[SensorEntity] = []
     for cpu in entry_data.sampler.cpu_ids:
         entities.append(CpuCapacitySummarySensor(entry.entry_id, coordinator, cpu))
 
-        cpu_data = _cpu_snapshot(coordinator, cpu) or {}
         descriptions = _build_descriptions(
-            supports_capacity_adjusted=supports.get(cpu, False),
-            supports_epp=cpu_data.get("epp") is not None,
-            supports_epb=cpu_data.get("epb") is not None,
+            supports_capacity_adjusted=supports_capacity_adjusted.get(cpu, False),
+            supports_epp=supports_epp.get(cpu, False),
+            supports_epb=supports_epb.get(cpu, False),
         )
         for description in descriptions:
             entities.append(
