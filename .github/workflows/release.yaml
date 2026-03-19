@@ -1,0 +1,19 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate version matches release tag
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('custom_components/cpu_capacity/manifest.json'))['version'])")
+          tag="${GITHUB_REF#refs/tags/v}"
+          if [ "$version" != "$tag" ]; then
+            echo "manifest.json version ($version) does not match release tag ($tag)"
+            exit 1
+          fi
