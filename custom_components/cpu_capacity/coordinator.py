@@ -12,7 +12,7 @@ import time
 from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -44,7 +44,7 @@ class RollingWindow:
         if len(self._buf) > self.max_samples:
             self._sum -= self._buf.popleft()
 
-    def mean(self) -> Optional[float]:
+    def mean(self) -> float | None:
         if not self._buf:
             return None
         return self._sum / float(len(self._buf))
@@ -61,7 +61,7 @@ class CpuRollingAverages:
         }
 
     def add_sample(
-        self, mhz: float, load_pct: float, capacity_adjusted_load_pct: Optional[float]
+        self, mhz: float, load_pct: float, capacity_adjusted_load_pct: float | None
     ) -> None:
         for win in self.windows["mhz"].values():
             win.add(mhz)
@@ -71,7 +71,7 @@ class CpuRollingAverages:
             for win in self.windows["capacity_adjusted_load_pct"].values():
                 win.add(capacity_adjusted_load_pct)
 
-    def mean(self, metric: str, window: str) -> Optional[float]:
+    def mean(self, metric: str, window: str) -> float | None:
         metric_windows = self.windows.get(metric)
         if metric_windows is None:
             return None
@@ -81,7 +81,7 @@ class CpuRollingAverages:
         return rolling.mean()
 
 
-def _safe_read_text(path: str) -> Optional[str]:
+def _safe_read_text(path: str) -> str | None:
     try:
         with open(path, "r", encoding="utf-8") as f:
             value = f.read().strip()
@@ -129,7 +129,7 @@ def _read_proc_stat_totals() -> dict[int, tuple[int, int]]:
 
 def _parse_proc_cpuinfo_mhz_map() -> dict[int, float]:
     out: dict[int, float] = {}
-    current_cpu: Optional[int] = None
+    current_cpu: int | None = None
 
     try:
         with open("/proc/cpuinfo", "r", encoding="utf-8") as f:
@@ -186,7 +186,7 @@ def _read_max_mhz(cpu_ids: list[int], logger: logging.Logger) -> dict[int, float
             f"/sys/devices/system/cpu/cpu{cpu}/cpufreq/cpuinfo_max_freq",
             f"/sys/devices/system/cpu/cpu{cpu}/cpufreq/scaling_max_freq",
         ]
-        value: Optional[float] = None
+        value: float | None = None
         for path in candidates:
             text = _safe_read_text(path)
             if text and text.isdigit():
@@ -223,11 +223,11 @@ def _epb_path(cpu: int) -> str:
     return EPB_PATH_TEMPLATE.format(cpu=cpu)
 
 
-def _read_epp(cpu: int) -> Optional[str]:
+def _read_epp(cpu: int) -> str | None:
     return _safe_read_text(_epp_path(cpu))
 
 
-def _read_epb(cpu: int) -> Optional[int]:
+def _read_epb(cpu: int) -> int | None:
     text = _safe_read_text(_epb_path(cpu))
     if text is None:
         return None
