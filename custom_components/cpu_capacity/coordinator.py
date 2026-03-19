@@ -170,7 +170,10 @@ def _parse_proc_cpuinfo_mhz_map() -> dict[int, float]:
                 if line.lower().startswith("cpu mhz") and current_cpu is not None:
                     _, value = line.split(":", 1)
                     out[current_cpu] = float(value.strip())
-    except (OSError, ValueError):
+    except (OSError, ValueError) as err:
+        logging.getLogger(__name__).debug(
+            "Failed to parse /proc/cpuinfo for MHz fallback: %s", err
+        )
         return {}
 
     return out
