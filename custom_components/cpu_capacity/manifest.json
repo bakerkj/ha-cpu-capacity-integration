@@ -1,7 +1,7 @@
 {
   "domain": "cpu_capacity",
   "name": "CPU Capacity",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "config_flow": true,
   "documentation": "https://github.com/bakerkj/ha-cpu-capacity-integration",
   "issue_tracker": "https://github.com/bakerkj/ha-cpu-capacity-integration/issues",
