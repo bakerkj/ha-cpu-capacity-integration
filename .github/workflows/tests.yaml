@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.13"
+      - uses: actions/cache@v5.0.4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements-test.txt') }}
+      - run: pip install -r requirements-test.txt
+      - run: python -m pytest tests/ -v
