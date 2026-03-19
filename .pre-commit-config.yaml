@@ -1,0 +1,89 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.6
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
+    hooks:
+      - id: mypy
+        args: ["--ignore-missing-imports"]
+        additional_dependencies: ["types-requests"]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell
+        args: ["--ignore-words-list", "hass,renderD,renderd"]
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        types_or: [yaml, json, markdown]
+        args: ["--prose-wrap", "always"]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        files: \.sh$
+        args: ["-S", "warning", "-e", "SC1091"]
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        files: \.sh$
+        args: ["-w", "-i", "2", "-ci"]
+
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+        args: ["--ignore", "DL3006", "--ignore", "DL3018"]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.6
+    hooks:
+      - id: insert-license
+        name: Ensure Python copyright header
+        files: \.py$
+        args:
+          - --license-filepath
+          - .copyright-header.txt
+          - --comment-style
+          - "#"
+          - --detect-license-in-X-top-lines=8
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.37.0
+    hooks:
+      - id: check-jsonschema
+        name: Validate pre-commit config schema
+        files: ^\.pre-commit-config\.yaml$
+        args:
+          - --schemafile
+          - https://json.schemastore.org/pre-commit-config.json
+      - id: check-jsonschema
+        name: Validate Home Assistant integration manifest schema (remote)
+        files: ^ha-cpu-capacity-integration/custom_components/cpu_capacity/manifest.json$
+        args:
+          - --schemafile
+          - https://raw.githubusercontent.com/home-assistant/core/refs/heads/dev/script/json_schemas/manifest_schema.json
