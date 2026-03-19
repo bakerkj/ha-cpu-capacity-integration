@@ -36,7 +36,8 @@ def _build_schema(sample_default: float, publish_default: float) -> vol.Schema:
     )
 
 
-class CpuCapacityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+@config_entries.HANDLERS.register(DOMAIN)
+class CpuCapacityConfigFlow(config_entries.ConfigFlow):
     VERSION = 1
 
     @staticmethod
