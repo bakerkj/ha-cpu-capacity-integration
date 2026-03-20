@@ -75,6 +75,11 @@ repos:
           - "#"
           - --detect-license-in-X-top-lines=8
 
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.11
+    hooks:
+      - id: actionlint
+
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.37.0
     hooks:
