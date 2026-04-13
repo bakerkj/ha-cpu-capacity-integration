@@ -90,7 +90,12 @@ repos:
           - --schemafile
           - https://json.schemastore.org/pre-commit-config.json
       - id: check-github-workflows
-      - id: check-dependabot
+      - id: check-jsonschema
+        name: Validate Renovate config schema
+        files: ^renovate\.json$
+        args:
+          - --schemafile
+          - https://docs.renovatebot.com/renovate-schema.json
       - id: check-jsonschema
         name: Validate Home Assistant integration manifest schema (remote)
         files: ^ha-cpu-capacity-integration/custom_components/cpu_capacity/manifest.json$
