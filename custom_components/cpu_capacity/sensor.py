@@ -38,6 +38,7 @@ def _build_descriptions(
     descriptions: list[CpuMetricDescription] = []
 
     for window in ("1m", "5m", "15m"):
+        enabled_by_default = window != "5m"
         descriptions.append(
             CpuMetricDescription(
                 key=f"mhz_{window}",
@@ -48,6 +49,7 @@ def _build_descriptions(
                 state_class=SensorStateClass.MEASUREMENT,
                 icon="mdi:sine-wave",
                 suggested_display_precision=0,
+                entity_registry_enabled_default=enabled_by_default,
             )
         )
         descriptions.append(
@@ -59,6 +61,7 @@ def _build_descriptions(
                 state_class=SensorStateClass.MEASUREMENT,
                 icon="mdi:gauge",
                 suggested_display_precision=2,
+                entity_registry_enabled_default=enabled_by_default,
             )
         )
 
@@ -72,6 +75,7 @@ def _build_descriptions(
                     state_class=SensorStateClass.MEASUREMENT,
                     icon="mdi:speedometer",
                     suggested_display_precision=2,
+                    entity_registry_enabled_default=enabled_by_default,
                 )
             )
 
