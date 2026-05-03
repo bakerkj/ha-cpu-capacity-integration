@@ -83,7 +83,7 @@ repos:
       - id: actionlint
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.1
+    rev: 0.37.2
     hooks:
       - id: check-jsonschema
         name: Validate pre-commit config schema
