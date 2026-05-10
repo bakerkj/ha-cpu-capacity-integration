@@ -32,3 +32,20 @@ Capacity-Adjusted Load % formula:
 - The integration reads only from `/proc` and `/sys/devices/system/cpu/*`.
 - If some CPUs do not expose max MHz, capacity-adjusted sensors for those CPUs
   are omitted.
+
+## Development
+
+Commits must follow the
+[Conventional Commits](https://www.conventionalcommits.org/) spec —
+release-please uses commit prefixes (`feat:`, `fix:`, etc.) to drive version
+bumps.
+
+After cloning, install the pre-commit hooks **including the commit-msg hook**
+(the default `pre-commit install` only wires up pre-commit-stage hooks):
+
+```
+uvx pre-commit install --hook-type pre-commit --hook-type commit-msg
+```
+
+Without `--hook-type commit-msg`, malformed commit messages won't be caught
+locally — CI (`Commitlint` workflow) will still reject them.

@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -17,3 +20,13 @@ jobs:
             echo "manifest.json version ($version) does not match release tag ($tag)"
             exit 1
           fi
+      - name: Build release zip
+        run: |
+          cd custom_components/cpu_capacity
+          zip -r "$GITHUB_WORKSPACE/cpu_capacity.zip" .
+      - name: Attach zip to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run:
+          gh release upload "${GITHUB_REF#refs/tags/}" cpu_capacity.zip
+          --clobber
