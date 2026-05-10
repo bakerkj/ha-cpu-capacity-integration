@@ -82,6 +82,13 @@ repos:
     hooks:
       - id: actionlint
 
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.18.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ["@commitlint/config-conventional@19"]
+
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.37.2
     hooks:
@@ -91,6 +98,12 @@ repos:
         args:
           - --schemafile
           - https://json.schemastore.org/pre-commit-config.json
+      - id: check-jsonschema
+        name: Validate commitlint config schema
+        files: ^\.commitlintrc\.json$
+        args:
+          - --schemafile
+          - https://json.schemastore.org/commitlintrc.json
       - id: check-github-workflows
       - id: check-jsonschema
         name: Validate Renovate config schema

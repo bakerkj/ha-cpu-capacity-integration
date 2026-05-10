@@ -1,0 +1,3 @@
+# release-please writes long URL-bearing bullets that exceed the prose-wrap
+# print width and would otherwise cause prettier to reformat its output.
+CHANGELOG.md

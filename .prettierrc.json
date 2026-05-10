@@ -1,0 +1,8 @@
+{
+  "overrides": [
+    {
+      "files": "**/manifest.json",
+      "options": { "printWidth": 1 }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "ha-cpu-capacity-integration",
+      "include-component-in-tag": false,
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance Improvements" },
+        { "type": "revert", "section": "Reverts" },
+        { "type": "chore", "section": "Miscellaneous Chores" },
+        { "type": "docs", "section": "Documentation" },
+        { "type": "style", "section": "Styles" },
+        { "type": "refactor", "section": "Code Refactoring" },
+        { "type": "test", "section": "Tests" },
+        { "type": "build", "section": "Build System" },
+        { "type": "ci", "section": "Continuous Integration" }
+      ],
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "custom_components/cpu_capacity/manifest.json",
+          "jsonpath": "$.version"
+        },
+        "pyproject.toml"
+      ]
+    }
+  }
+}
