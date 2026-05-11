@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.6](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.5...v0.0.6) (2026-05-11)
+
+
+### Miscellaneous Chores
+
+* **deps:** update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.25.0 ([95f2a69](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/95f2a69dc7a24d6b1554f1cda34a797290b57e55))
+* **deps:** update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.25.0 ([d1378c7](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/d1378c782bfdbd3d35f6028bfffcddaa7def1923))
+* migrate prettier hook and add setup-uv cache-suffix ([b28caa3](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/b28caa343a69f9c2dbe04e3847cb0bf307d0c50a))
+* migrate prettier hook and add setup-uv cache-suffix ([e140723](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/e1407234119ce2cd02bbf2962a0827ae08561e46))
+
+
+### Continuous Integration
+
+* pin ubuntu-latest runners to ubuntu-24.04 for renovate tracking ([1285245](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/12852459dd511ba451a3f7cfb614b24de4671c2d))
+* pin ubuntu-latest runners to ubuntu-24.04 for renovate tracking ([48de70a](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/48de70a60bcd9b95ca8bbd401a1843cab6d5fcd9))
+* run mypy against real runtime deps, drop --ignore-missing-imports ([df8f704](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/df8f704ba363c6a560bc863cfa5b8530492df4df))
+* run mypy against real runtime deps, drop --ignore-missing-imports ([07b586e](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/07b586e100a9f1d4084e9574efe63557b9cc40f8))
+* skip mypy in the pre-commit CI workflow ([c6dbed2](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/c6dbed2df1ccc6b8a1dfb3e8e0a2f25e6261bf01))
+
 ## [0.0.5](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.4...v0.0.5) (2026-05-10)
 
 
