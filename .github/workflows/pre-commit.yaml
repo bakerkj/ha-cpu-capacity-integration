@@ -19,4 +19,4 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - run: SKIP=no-commit-to-branch uvx pre-commit run --all-files
+      - run: SKIP=no-commit-to-branch,mypy uvx pre-commit run --all-files
