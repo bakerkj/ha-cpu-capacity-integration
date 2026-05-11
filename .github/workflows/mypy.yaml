@@ -1,0 +1,22 @@
+name: mypy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  mypy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: "3.14"
+          cache-dependency-glob: "uv.lock"
+          cache-suffix: mypy
+      - run: uv run mypy custom_components/cpu_capacity
