@@ -10,12 +10,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_PUBLISH_INTERVAL_SECONDS,
     CONF_SAMPLE_INTERVAL_SECONDS,
-    DEFAULT_PUBLISH_INTERVAL_SECONDS,
     DEFAULT_SAMPLE_INTERVAL_SECONDS,
     DOMAIN,
+    MAX_PUBLISH_INTERVAL,
+    MIN_PUBLISH_INTERVAL,
     PLATFORMS,
+    PUBLISH_INTERVAL_CONF_BY_WINDOW,
+    resolve_publish_interval,
 )
 from .coordinator import CpuCapacityCoordinator, CpuCapacitySampler
 
@@ -25,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass
 class CpuCapacityEntryData:
     sampler: CpuCapacitySampler
-    coordinator: CpuCapacityCoordinator
+    coordinators: dict[str, CpuCapacityCoordinator]
 
 
 def _entry_float(entry: ConfigEntry, key: str, default: float) -> float:
@@ -47,14 +49,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, CONF_SAMPLE_INTERVAL_SECONDS, DEFAULT_SAMPLE_INTERVAL_SECONDS
         ),
     )
-    publish_interval = max(
-        1.0,
-        _entry_float(
-            entry, CONF_PUBLISH_INTERVAL_SECONDS, DEFAULT_PUBLISH_INTERVAL_SECONDS
-        ),
-    )
-    if publish_interval < sample_interval:
-        publish_interval = sample_interval
+    source = {**entry.data, **entry.options}
+    publish_intervals = {
+        window: min(
+            MAX_PUBLISH_INTERVAL,
+            max(
+                MIN_PUBLISH_INTERVAL,
+                sample_interval,
+                resolve_publish_interval(window, source),
+            ),
+        )
+        for window in PUBLISH_INTERVAL_CONF_BY_WINDOW
+    }
 
     logger = _LOGGER.getChild(entry.entry_id)
 
@@ -62,18 +68,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         logger,
         sample_interval_seconds=sample_interval,
-        publish_interval_seconds=publish_interval,
+        publish_intervals_by_window=publish_intervals,
     )
-    coordinator = CpuCapacityCoordinator(hass, logger, sampler)
+    coordinators = {
+        window: CpuCapacityCoordinator(
+            hass, logger, sampler, window, publish_intervals[window]
+        )
+        for window in PUBLISH_INTERVAL_CONF_BY_WINDOW
+    }
     entry_added = False
 
     try:
         await sampler.async_start()
-        await coordinator.async_config_entry_first_refresh()
+        for coordinator in coordinators.values():
+            await coordinator.async_config_entry_first_refresh()
 
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = CpuCapacityEntryData(
             sampler=sampler,
-            coordinator=coordinator,
+            coordinators=coordinators,
         )
         entry_added = True
 

@@ -21,8 +21,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CpuCapacityEntryData
-from .const import DOMAIN, SUMMARY_SENSOR_NAME
-from .coordinator import CpuCapacityCoordinator, CpuSnapshot
+from .const import DOMAIN, PRIMARY_WINDOW, SUMMARY_SENSOR_NAME
+from .coordinator import (
+    WINDOW_SECONDS,
+    CpuCapacityCoordinator,
+    CpuSnapshot,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -132,6 +136,19 @@ def _cpu_snapshot(
     if not coordinator.data:
         return None
     return coordinator.data["cpus"].get(cpu)
+
+
+def _window_for_metric(metric_key: str) -> str:
+    """Map a metric to the averaging window whose coordinator drives it.
+
+    Window metrics (``*_1m``/``*_5m``/``*_15m``) follow their own window;
+    non-window metrics (``max_mhz``, ``epp``, ``epb``) and the summary sensor
+    follow ``PRIMARY_WINDOW``.
+    """
+    for window in WINDOW_SECONDS:
+        if metric_key.endswith(f"_{window}"):
+            return window
+    return PRIMARY_WINDOW
 
 
 def _normalize_attribute_key(raw_key: str) -> str:
@@ -277,14 +294,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     entry_data: CpuCapacityEntryData = hass.data[DOMAIN][entry.entry_id]
-    coordinator = entry_data.coordinator
+    coordinators = entry_data.coordinators
     supports_capacity_adjusted = entry_data.sampler.supports_capacity_adjusted
     supports_epp = entry_data.sampler.supports_epp
     supports_epb = entry_data.sampler.supports_epb
 
     entities: list[SensorEntity] = []
     for cpu in entry_data.sampler.cpu_ids:
-        entities.append(CpuCapacitySummarySensor(entry.entry_id, coordinator, cpu))
+        entities.append(
+            CpuCapacitySummarySensor(entry.entry_id, coordinators[PRIMARY_WINDOW], cpu)
+        )
 
         descriptions = _build_descriptions(
             supports_capacity_adjusted=supports_capacity_adjusted.get(cpu, False),
@@ -292,6 +311,7 @@ async def async_setup_entry(
             supports_epb=supports_epb.get(cpu, False),
         )
         for description in descriptions:
+            coordinator = coordinators[_window_for_metric(description.metric_key)]
             entities.append(
                 CpuCapacitySensor(entry.entry_id, coordinator, cpu, description)
             )

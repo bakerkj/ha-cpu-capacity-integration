@@ -52,7 +52,7 @@ class CoordinatorSnapshot(TypedDict):
     sample_count: int
     last_sample_epoch: float
     sample_interval_seconds: float
-    publish_interval_seconds: float
+    publish_intervals_by_window: dict[str, float]
     cpus: dict[int, CpuSnapshot]
 
 
@@ -277,15 +277,20 @@ class CpuCapacitySampler:
         hass: HomeAssistant,
         logger: logging.Logger,
         sample_interval_seconds: float,
-        publish_interval_seconds: float,
+        publish_intervals_by_window: dict[str, float],
     ) -> None:
         self.hass = hass
         self.logger = logger
         self._sample_interval_seconds = max(0.1, float(sample_interval_seconds))
-        self._publish_interval_seconds = max(
-            self._sample_interval_seconds,
-            float(publish_interval_seconds),
-        )
+        # Each window publishes no faster than the sampler produces data.
+        self._publish_intervals_by_window: dict[str, float] = {
+            window: max(
+                self._sample_interval_seconds,
+                float(publish_intervals_by_window[window]),
+            )
+            for window in WINDOW_SECONDS
+            if window in publish_intervals_by_window
+        }
 
         self._window_sizes: dict[str, int] = {
             label: max(1, int(math.ceil(seconds / self._sample_interval_seconds)))
@@ -329,8 +334,8 @@ class CpuCapacitySampler:
         return self._sample_interval_seconds
 
     @property
-    def publish_interval_seconds(self) -> float:
-        return self._publish_interval_seconds
+    def publish_intervals_by_window(self) -> dict[str, float]:
+        return dict(self._publish_intervals_by_window)
 
     async def async_start(self) -> None:
         if self._running:
@@ -486,24 +491,35 @@ class CpuCapacitySampler:
             sample_count=self._sample_count,
             last_sample_epoch=self._last_sample_epoch,
             sample_interval_seconds=self._sample_interval_seconds,
-            publish_interval_seconds=self._publish_interval_seconds,
+            publish_intervals_by_window=dict(self._publish_intervals_by_window),
             cpus=cpu_data,
         )
 
 
 class CpuCapacityCoordinator(DataUpdateCoordinator[CoordinatorSnapshot]):
+    """Publishes the shared sampler's data at one window's cadence.
+
+    One instance per averaging window (1m/5m/15m); all instances share a
+    single :class:`CpuCapacitySampler`, so each refresh only snapshots the
+    already-collected rolling averages.
+    """
+
     def __init__(
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
         sampler: CpuCapacitySampler,
+        window: str,
+        publish_interval_seconds: float,
     ) -> None:
         self.sampler = sampler
+        self.window = window
+        self._publish_interval_seconds = publish_interval_seconds
         super().__init__(
             hass,
             logger,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=sampler.publish_interval_seconds),
+            name=f"{DOMAIN}_{window}",
+            update_interval=timedelta(seconds=publish_interval_seconds),
         )
 
     async def _async_update_data(self) -> CoordinatorSnapshot:
@@ -516,7 +532,7 @@ class CpuCapacityCoordinator(DataUpdateCoordinator[CoordinatorSnapshot]):
             raise UpdateFailed("No sample timestamp available")
 
         stale_timeout = max(
-            5.0, self.sampler.publish_interval_seconds * STALE_DATA_TIMEOUT_MULTIPLIER
+            5.0, self._publish_interval_seconds * STALE_DATA_TIMEOUT_MULTIPLIER
         )
         age = time.time() - snapshot["last_sample_epoch"]
         if age > stale_timeout:
