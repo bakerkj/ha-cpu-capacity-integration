@@ -26,6 +26,11 @@
           "path": "custom_components/cpu_capacity/manifest.json",
           "jsonpath": "$.version"
         },
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='ha-cpu-capacity-integration')].version"
+        },
         "pyproject.toml"
       ]
     }
