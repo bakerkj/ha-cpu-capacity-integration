@@ -3,15 +3,17 @@
     "step": {
       "user": {
         "title": "CPU Capacity",
-        "description": "Configure local CPU capacity sampling and publish cadence.",
+        "description": "Configure local CPU capacity sampling and per-window update cadence.",
         "data": {
           "sample_interval_seconds": "Sample interval (seconds)",
-          "publish_interval_seconds": "Update interval (seconds)"
+          "publish_interval_1m_seconds": "Update interval — 1 min sensors (seconds)",
+          "publish_interval_5m_seconds": "Update interval — 5 min sensors (seconds)",
+          "publish_interval_15m_seconds": "Update interval — 15 min sensors (seconds)"
         }
       }
     },
     "error": {
-      "publish_too_small": "Update interval must be greater than or equal to sample interval"
+      "publish_too_small": "Each update interval must be greater than or equal to the sample interval"
     },
     "abort": {
       "single_instance_allowed": "Only one CPU Capacity configuration is allowed"
@@ -21,14 +23,17 @@
     "step": {
       "init": {
         "title": "CPU Capacity",
+        "description": "Each averaging window updates (and records) on its own interval. Slower windows can update less often to reduce recorder load.",
         "data": {
           "sample_interval_seconds": "Sample interval (seconds)",
-          "publish_interval_seconds": "Update interval (seconds)"
+          "publish_interval_1m_seconds": "Update interval — 1 min sensors (seconds)",
+          "publish_interval_5m_seconds": "Update interval — 5 min sensors (seconds)",
+          "publish_interval_15m_seconds": "Update interval — 15 min sensors (seconds)"
         }
       }
     },
     "error": {
-      "publish_too_small": "Update interval must be greater than or equal to sample interval"
+      "publish_too_small": "Each update interval must be greater than or equal to the sample interval"
     }
   }
 }
