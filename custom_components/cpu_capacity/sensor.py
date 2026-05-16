@@ -60,7 +60,7 @@ def _build_descriptions(
                 native_unit_of_measurement=PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
                 icon="mdi:gauge",
-                suggested_display_precision=2,
+                suggested_display_precision=1,
                 entity_registry_enabled_default=enabled_by_default,
             )
         )
@@ -74,7 +74,7 @@ def _build_descriptions(
                     native_unit_of_measurement=PERCENTAGE,
                     state_class=SensorStateClass.MEASUREMENT,
                     icon="mdi:speedometer",
-                    suggested_display_precision=2,
+                    suggested_display_precision=1,
                     entity_registry_enabled_default=enabled_by_default,
                 )
             )
@@ -154,6 +154,35 @@ def _round_summary_value(key: str, value: Any) -> Any:
     return value
 
 
+# Frequency is reported as a kHz-derived rolling average in the low thousands of
+# MHz; it wanders by tens of MHz every publish, so decimal rounding never lets
+# the recorder dedupe and sub-50 MHz precision is noise. Quantize to this step
+# instead.
+_MHZ_NATIVE_STEP = 50
+
+
+def _round_native_value(metric_key: str, value: Any) -> Any:
+    """Round the value the recorder sees so unchanged samples are deduped.
+
+    Loads keep one decimal (sub-percent detail on the responsive 1m windows is
+    preserved); MHz is quantized to ``_MHZ_NATIVE_STEP``. Non-numeric metrics
+    (``epp`` string, ``epb`` integer) pass through unchanged.
+    """
+    if value is None or isinstance(value, bool):
+        return value
+    if not isinstance(value, (int, float)):
+        return value
+
+    number = float(value)
+    if metric_key == "max_mhz" or metric_key.startswith("mhz_"):
+        return int(round(number / _MHZ_NATIVE_STEP) * _MHZ_NATIVE_STEP)
+    if metric_key.startswith("load_pct_") or metric_key.startswith(
+        "capacity_adjusted_load_pct_"
+    ):
+        return round(number, 1)
+    return value
+
+
 class CpuCapacityBaseSensor(CoordinatorEntity[CpuCapacityCoordinator], SensorEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -198,7 +227,10 @@ class CpuCapacitySensor(CpuCapacityBaseSensor):
         cpu_data = self._cpu_data
         if cpu_data is None:
             return None
-        return cpu_data.get(self.entity_description.metric_key)
+        return _round_native_value(
+            self.entity_description.metric_key,
+            cpu_data.get(self.entity_description.metric_key),
+        )
 
     @property
     def available(self) -> bool:
