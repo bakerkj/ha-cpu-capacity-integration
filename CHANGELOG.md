@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.0.7](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.6...v0.0.7) (2026-05-16)
+
+
+### Features
+
+* **sensor:** round native values to cut recorder volume ([2f32f5d](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/2f32f5d5b493c514732985bd6000d096156260b7))
+* **sensor:** round native values to cut recorder volume ([b027416](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/b027416bd1590754c1678ae3d686aaa85294de39))
+* tunable per-window (1m/5m/15m) update intervals ([8ea5c89](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/8ea5c8991f5fd81a989ec9fe5873f42fc4177271))
+* tunable per-window (1m/5m/15m) update intervals ([6cf23b9](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/6cf23b9b2e928bcfa80654042bec672f0d372024))
+
+
+### Miscellaneous Chores
+
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.15.13 ([74066ed](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/74066ed2378fb3113f354726166221b97aedd976))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.15.13 ([5a30495](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/5a30495aad23d2c3694d6085dbd0955ba1873230))
+
+
+### Continuous Integration
+
+* sync uv.lock package version on release-please bumps ([933d2f3](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/933d2f36c0c0cbf1caed92af312159189e853f6b))
+* sync uv.lock package version on release-please bumps ([b5265b6](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/b5265b6be5c5b882ee76bbdd69927756f34846fb))
+
 ## [0.0.6](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.5...v0.0.6) (2026-05-11)
 
 
