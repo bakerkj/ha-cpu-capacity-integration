@@ -34,7 +34,7 @@ def _entry_float(entry: ConfigEntry, key: str, default: float) -> float:
     value = entry.options.get(key, entry.data.get(key, default))
     try:
         return float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return float(default)
 
 

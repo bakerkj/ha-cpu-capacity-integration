@@ -56,7 +56,7 @@ def resolve_publish_interval(window: str, source: Mapping[str, Any]) -> float:
         )
     try:
         return float(raw)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return float(DEFAULT_PUBLISH_INTERVAL_SECONDS)
 
 
