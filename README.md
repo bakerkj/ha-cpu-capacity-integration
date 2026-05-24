@@ -40,11 +40,11 @@ Commits must follow the
 release-please uses commit prefixes (`feat:`, `fix:`, etc.) to drive version
 bumps.
 
-After cloning, install the pre-commit hooks **including the commit-msg hook**
-(the default `pre-commit install` only wires up pre-commit-stage hooks):
+After cloning, install the hooks **including the commit-msg hook** (the default
+`prek install` only wires up pre-commit-stage hooks):
 
 ```
-uvx pre-commit install --hook-type pre-commit --hook-type commit-msg
+uvx prek install --overwrite --hook-type pre-commit --hook-type commit-msg
 ```
 
 Without `--hook-type commit-msg`, malformed commit messages won't be caught
