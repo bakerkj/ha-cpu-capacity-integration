@@ -1,0 +1,19 @@
+name: prek
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  prek:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6.0.2
+      # mypy is skipped here (the dedicated mypy.yaml workflow runs it with a
+      # full HA dependency env).
+      - uses: j178/prek-action@v2.0.4
+        env:
+          SKIP: no-commit-to-branch,mypy
+        with:
+          extra-args: --all-files
