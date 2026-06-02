@@ -10,6 +10,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6.0.2
+      # Cache prek's hook envs (cloned hook repos + their installed tools —
+      # ruff, prettier's node_modules, actionlint binary, codespell, etc.).
+      # Keyed on .pre-commit-config.yaml so a hook bump cleanly invalidates;
+      # restore-keys lets us reuse on partial hook changes for a warm-ish run.
+      - uses: actions/cache@v5.0.5
+        with:
+          path: ~/.cache/prek
+          key: prek-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            prek-${{ runner.os }}-
       # mypy is skipped here (the dedicated mypy.yaml workflow runs it with a
       # full HA dependency env).
       - uses: j178/prek-action@v2.0.4
