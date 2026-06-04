@@ -9,7 +9,7 @@ jobs:
   prek:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
       # Cache prek's hook envs (cloned hook repos + their installed tools —
       # ruff, prettier's node_modules, actionlint binary, codespell, etc.).
       # Keyed on .pre-commit-config.yaml so a hook bump cleanly invalidates;
