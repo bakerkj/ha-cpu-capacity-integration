@@ -17,6 +17,13 @@
         "runs-on:\\s*(?<depName>ubuntu|macos|windows)-(?<currentValue>[\\w.-]+)"
       ],
       "datasourceTemplate": "github-runners"
+    },
+    {
+      "customType": "regex",
+      "description": "pre-commit additional_dependencies (npm packages pinned with @version)",
+      "managerFilePatterns": ["/^\\.pre-commit-config\\.yaml$/"],
+      "matchStrings": ["\"(?<depName>@?[\\w./-]+)@(?<currentValue>[\\w.-]+)\""],
+      "datasourceTemplate": "npm"
     }
   ],
   "packageRules": [
