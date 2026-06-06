@@ -56,6 +56,7 @@ jobs:
                broken edge cases. If you find one, leave an inline
                comment at the specific line.
             2. HA integration correctness.
+            3. Security.
 
             Hard rules:
 
