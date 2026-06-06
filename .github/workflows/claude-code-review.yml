@@ -65,19 +65,7 @@ jobs:
 
             1. Bugs — logic errors, race conditions, off-by-ones,
                broken edge cases. If you find one, leave an inline
-               comment at the specific line. Common traps in this
-               codebase:
-               - Rolling-window math: window length, sample
-                 alignment, missed samples after sleep/suspend,
-                 division by zero when max_mhz is 0.
-               - Sampler / coordinator coupling: sampler runs at
-                 0.5 s, coordinators publish at 1m/5m/15m windows —
-                 verify the publish path doesn't block the sampler
-                 or drop samples while computing aggregates.
-               - The `except (X, Y):` tuple form vs. the deprecated
-                 Python-2 `except X, Y:` syntax — the second is a
-                 SyntaxError under Python 3 and will hard-fail
-                 module import.
+               comment at the specific line.
             2. HA integration correctness:
                - All sysfs reads (`/sys/devices/system/cpu/.../scaling_*`,
                  `/proc/stat`, EPP/EPB) must NOT happen on the event
