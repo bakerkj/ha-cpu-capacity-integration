@@ -47,41 +47,11 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            This is a Home Assistant custom integration that samples
-            per-CPU load + frequency + EPP/EPB from sysfs, computes
-            1m/5m/15m rolling averages and a capacity-adjusted load
-            (`load_pct * current_mhz / max_mhz`), and exposes per-CPU
-            sensors. Code lives in `custom_components/cpu_capacity/`.
-            Two cadences in tension: a fast internal sampler (default
-            0.5 s) and a slower HA publish interval (default 15 s).
+            This is a Home Assistant custom integration. Code lives in
+            `custom_components/cpu_capacity/`.
 
-            Review this PR for *real* issues. Prioritize, in order:
-
-            1. Bugs — logic errors, race conditions, off-by-ones,
-               broken edge cases. If you find one, leave an inline
-               comment at the specific line.
-            2. HA integration correctness:
-               - All sysfs reads (`/sys/devices/system/cpu/.../scaling_*`,
-                 `/proc/stat`, EPP/EPB) must NOT happen on the event
-                 loop — wrap in `async_add_executor_job` or use a
-                 thread-backed sampler.
-               - DataUpdateCoordinator + CoordinatorEntity per window
-                 (1m/5m/15m); unique IDs stable across reboots; device
-                 hierarchy hub -> per-CPU.
-               - Config flow + options flow validate sample/publish
-                 intervals against documented min/max and surface
-                 actionable errors.
-               - No state leaks across `async_unload_entry` /
-                 `async_setup_entry` cycles (the sampler thread must
-                 actually stop).
-            3. Sysfs / kernel-interface fragility:
-               - Files may be absent on some kernels / CPUs (e.g.
-                 EPP/EPB on AMD vs. Intel, or pre-Skylake) — the
-                 sensor should report unavailable, not crash.
-               - File reads are cheap individually but 0.5 s sampling
-                 across 100+ CPUs can pile up — verify batching.
-               - Numbers in sysfs are integers in kHz; conversions to
-                 MHz / Hz should be checked for off-by-1000s.
+            Review this PR for real issues. If you find one, leave an
+            inline comment at the specific line.
 
             Hard rules:
 
