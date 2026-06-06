@@ -50,8 +50,12 @@ jobs:
             This is a Home Assistant custom integration. Code lives in
             `custom_components/cpu_capacity/`.
 
-            Review this PR for real issues. If you find one, leave an
-            inline comment at the specific line.
+            Review this PR. Prioritize, in order:
+
+            1. Bugs — logic errors, race conditions, off-by-ones,
+               broken edge cases. If you find one, leave an inline
+               comment at the specific line.
+            2. HA integration correctness.
 
             Hard rules:
 
