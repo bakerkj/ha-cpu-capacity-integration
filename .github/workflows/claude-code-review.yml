@@ -1,44 +1,137 @@
 name: Claude Code Review
 
+# Built from the action's pr-review-comprehensive.yml example rather than
+# the `code-review@claude-code-plugins` plugin, which has multiple open
+# upstream bugs (anthropics/claude-code-action #1383, #1308, #1087, #825).
+# See ha-weewx for the full rationale; the prompt body is the only piece
+# that meaningfully varies between repos.
+
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+
+permissions:
+  contents: read
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
-    runs-on: ubuntu-latest
+    name: Auto code-review
+    # Skip auto-generated PRs:
+    #   * Renovate / Dependabot — already gated by CI + manual review.
+    #   * release-please — PR author is the user (PAT-driven), but the
+    #     head branch is always `release-please--…`, which is the
+    #     reliable signal.
+    if: |
+      github.event.pull_request.user.login != 'renovate[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
-      pull-requests: read
+      # write needed so the action can post review comments and update the
+      # progress-tracking comment that track_progress creates.
+      pull-requests: write
       issues: read
       id-token: write
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
 
+          # Flips mode from `agent` to `tag`, which auto-loads the
+          # github_comment MCP server and creates a tracking comment with
+          # progress checkboxes so a failure still leaves a visible trail.
+          track_progress: true
+
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            This is a Home Assistant custom integration that samples
+            per-CPU load + frequency + EPP/EPB from sysfs, computes
+            1m/5m/15m rolling averages and a capacity-adjusted load
+            (`load_pct * current_mhz / max_mhz`), and exposes per-CPU
+            sensors. Code lives in `custom_components/cpu_capacity/`.
+            Two cadences in tension: a fast internal sampler (default
+            0.5 s) and a slower HA publish interval (default 15 s).
+
+            Review this PR for *real* issues. Prioritize, in order:
+
+            1. Bugs — logic errors, race conditions, off-by-ones,
+               broken edge cases. If you find one, leave an inline
+               comment at the specific line. Common traps in this
+               codebase:
+               - Rolling-window math: window length, sample
+                 alignment, missed samples after sleep/suspend,
+                 division by zero when max_mhz is 0.
+               - Sampler / coordinator coupling: sampler runs at
+                 0.5 s, coordinators publish at 1m/5m/15m windows —
+                 verify the publish path doesn't block the sampler
+                 or drop samples while computing aggregates.
+               - The `except (X, Y):` tuple form vs. the deprecated
+                 Python-2 `except X, Y:` syntax — the second is a
+                 SyntaxError under Python 3 and will hard-fail
+                 module import.
+            2. HA integration correctness:
+               - All sysfs reads (`/sys/devices/system/cpu/.../scaling_*`,
+                 `/proc/stat`, EPP/EPB) must NOT happen on the event
+                 loop — wrap in `async_add_executor_job` or use a
+                 thread-backed sampler.
+               - DataUpdateCoordinator + CoordinatorEntity per window
+                 (1m/5m/15m); unique IDs stable across reboots; device
+                 hierarchy hub -> per-CPU.
+               - Config flow + options flow validate sample/publish
+                 intervals against documented min/max and surface
+                 actionable errors.
+               - No state leaks across `async_unload_entry` /
+                 `async_setup_entry` cycles (the sampler thread must
+                 actually stop).
+            3. Sysfs / kernel-interface fragility:
+               - Files may be absent on some kernels / CPUs (e.g.
+                 EPP/EPB on AMD vs. Intel, or pre-Skylake) — the
+                 sensor should report unavailable, not crash.
+               - File reads are cheap individually but 0.5 s sampling
+                 across 100+ CPUs can pile up — verify batching.
+               - Numbers in sysfs are integers in kHz; conversions to
+                 MHz / Hz should be checked for off-by-1000s.
+
+            Hard rules:
+
+            - Do NOT comment on style, naming, formatting, or "consider
+              adding a docstring" — the repo runs ruff + prettier + shfmt
+              in pre-commit and intentionally avoids redundant comments.
+            - Do NOT leave general praise or summary fluff.
+            - If you have nothing substantive to flag, post a single
+              short top-level comment saying "No issues found." That's
+              the success signal — silence isn't.
+            - When you do flag something, the comment body MUST include
+              the file path, the concrete failure mode, and the fix.
+
+          # mcp__github_inline_comment__create_inline_comment is the
+          # action's built-in inline-comment tool (loads only when named
+          # here). Bash gh allowlist is the fallback path the official
+          # pr-review-comprehensive.yml example uses for top-level
+          # comments and diff-fetching.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+      # The action's SDK call writes a JSONL transcript (per-turn tool_use,
+      # tool_result, permission events) to runner.temp/claude-execution-output.json.
+      # The action redacts those events from the public CI log "for security";
+      # uploading the raw record as an artifact keeps it visible only to
+      # collaborators — needed for diagnosing permission denials and turn-count
+      # blowups. `if: always()` so we capture failures too.
+      - name: Upload Claude execution log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name:
+            claude-execution-output-pr${{ github.event.pull_request.number }}
+          path: ${{ runner.temp }}/claude-execution-output.json
+          if-no-files-found: ignore
+          retention-days: 14
