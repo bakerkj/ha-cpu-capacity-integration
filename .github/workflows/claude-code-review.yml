@@ -1,11 +1,5 @@
 name: Claude Code Review
 
-# Built from the action's pr-review-comprehensive.yml example rather than
-# the `code-review@claude-code-plugins` plugin, which has multiple open
-# upstream bugs (anthropics/claude-code-action #1383, #1308, #1087, #825).
-# See ha-weewx for the full rationale; the prompt body is the only piece
-# that meaningfully varies between repos.
-
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
