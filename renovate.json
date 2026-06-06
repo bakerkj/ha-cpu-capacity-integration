@@ -24,6 +24,15 @@
       "managerFilePatterns": ["/^\\.pre-commit-config\\.yaml$/"],
       "matchStrings": ["\"(?<depName>@?[\\w./-]+)@(?<currentValue>[\\w.-]+)\""],
       "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "description": "uv tool required-version pin in pyproject.toml [tool.uv]",
+      "managerFilePatterns": ["/(^|/)pyproject\\.toml$/"],
+      "matchStrings": ["required-version\\s*=\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "uv",
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440"
     }
   ],
   "packageRules": [
