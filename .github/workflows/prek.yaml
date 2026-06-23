@@ -14,7 +14,7 @@ jobs:
       # ruff, prettier's node_modules, actionlint binary, codespell, etc.).
       # Keyed on .pre-commit-config.yaml so a hook bump cleanly invalidates;
       # restore-keys lets us reuse on partial hook changes for a warm-ish run.
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:
           path: ~/.cache/prek
           key: prek-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
