@@ -20,7 +20,7 @@ repos:
         args: ["--fix=lf"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.20
+    rev: v0.15.21
     hooks:
       - id: ruff-check
         args: ["--fix"]
@@ -43,7 +43,7 @@ repos:
         args: ["--ignore-words-list", "hass,renderD,renderd"]
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.9.4
+    rev: v3.9.5
     hooks:
       - id: prettier
         types_or: [yaml, json, markdown]
