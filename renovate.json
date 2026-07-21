@@ -25,10 +25,13 @@
     },
     {
       "customType": "regex",
-      "description": "pre-commit additional_dependencies (npm packages pinned with @version)",
+      "description": "npm packages pinned via pre-commit additional_dependencies (e.g. @commitlint/config-conventional@N in .pre-commit-config.yaml). The built-in pre-commit manager only bumps the `rev:` on each hook — it doesn't touch the additional_dependencies array. Standardized permissive form matches both @scoped and unscoped packages across all sibling repos.",
       "managerFilePatterns": ["/^\\.pre-commit-config\\.yaml$/"],
-      "matchStrings": ["\"(?<depName>@?[\\w./-]+)@(?<currentValue>[\\w.-]+)\""],
-      "datasourceTemplate": "npm"
+      "matchStrings": [
+        "\"(?<depName>@?[^\"@\\s]+(?:/[^\"@\\s]+)?)@(?<currentValue>[^\"\\s]+)\""
+      ],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
     },
     {
       "customType": "regex",
