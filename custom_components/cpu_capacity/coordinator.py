@@ -293,7 +293,7 @@ class CpuCapacitySampler:
         }
 
         self._window_sizes: dict[str, int] = {
-            label: max(1, int(math.ceil(seconds / self._sample_interval_seconds)))
+            label: max(1, math.ceil(seconds / self._sample_interval_seconds))
             for label, seconds in WINDOW_SECONDS.items()
         }
 
@@ -379,10 +379,8 @@ class CpuCapacitySampler:
                 await self.hass.async_add_executor_job(self._take_sample_sync)
             except (OSError, ValueError) as err:
                 self.logger.warning("CPU sampling failed: %s", err)
-            except Exception as err:  # noqa: BLE001
-                self.logger.error(
-                    "Unexpected error during CPU sampling: %s", err, exc_info=True
-                )
+            except Exception:
+                self.logger.exception("Unexpected error during CPU sampling")
 
     async def async_get_snapshot(self) -> CoordinatorSnapshot:
         async with self._lock:
@@ -433,8 +431,7 @@ class CpuCapacitySampler:
             dt = cur_total - prev_total
             di = cur_idle - prev_idle
             busy = dt - di
-            if busy < 0:
-                busy = 0
+            busy = max(busy, 0)
 
             load_pct = (float(busy) * 100.0 / float(dt)) if dt > 0 else 0.0
             mhz = current_mhz_by_cpu.get(cpu, 0.0)
@@ -537,7 +534,7 @@ class CpuCapacityCoordinator(DataUpdateCoordinator[CoordinatorSnapshot]):
         age = time.time() - snapshot["last_sample_epoch"]
         if age > stale_timeout:
             raise UpdateFailed(
-                (f"CPU sample data is stale ({age:.1f}s > {stale_timeout:.1f}s)")
+                f"CPU sample data is stale ({age:.1f}s > {stale_timeout:.1f}s)"
             )
 
         return snapshot
