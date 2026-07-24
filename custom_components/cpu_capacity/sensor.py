@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -165,8 +165,8 @@ def _round_summary_value(key: str, value: Any) -> Any:
 
     number = float(value)
     if key == "max_mhz" or key.startswith("mhz_"):
-        return int(round(number))
-    if key.startswith("load_pct_") or key.startswith("capacity_adjusted_load_pct_"):
+        return round(number)
+    if key.startswith(("load_pct_", "capacity_adjusted_load_pct_")):
         return round(number, 4)
     return value
 
@@ -193,9 +193,7 @@ def _round_native_value(metric_key: str, value: Any) -> Any:
     number = float(value)
     if metric_key == "max_mhz" or metric_key.startswith("mhz_"):
         return int(round(number / _MHZ_NATIVE_STEP) * _MHZ_NATIVE_STEP)
-    if metric_key.startswith("load_pct_") or metric_key.startswith(
-        "capacity_adjusted_load_pct_"
-    ):
+    if metric_key.startswith(("load_pct_", "capacity_adjusted_load_pct_")):
         return round(number, 1)
     return value
 
