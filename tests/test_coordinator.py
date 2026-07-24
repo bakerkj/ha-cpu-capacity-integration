@@ -16,7 +16,6 @@ from custom_components.cpu_capacity.coordinator import (
     _safe_read_text,
 )
 
-
 # ---------------------------------------------------------------------------
 # RollingWindow
 # ---------------------------------------------------------------------------
@@ -155,9 +154,11 @@ class TestReadProcStatTotals:
 
     def test_raises_if_no_cpu_entries(self) -> None:
         empty = "no cpu lines here\n"
-        with patch("builtins.open", return_value=StringIO(empty)):
-            with pytest.raises(RuntimeError, match="No per-CPU entries found"):
-                _read_proc_stat_totals()
+        with (
+            patch("builtins.open", return_value=StringIO(empty)),
+            pytest.raises(RuntimeError, match="No per-CPU entries found"),
+        ):
+            _read_proc_stat_totals()
 
 
 # ---------------------------------------------------------------------------
@@ -194,11 +195,13 @@ class TestParseProcCpuinfoMhzMap:
 
     def test_logs_debug_on_error(self) -> None:
         logger = MagicMock()
-        with patch("builtins.open", side_effect=OSError("boom")):
-            with patch(
+        with (
+            patch("builtins.open", side_effect=OSError("boom")),
+            patch(
                 "custom_components.cpu_capacity.coordinator.logging.getLogger",
                 return_value=logger,
-            ):
-                _parse_proc_cpuinfo_mhz_map()
+            ),
+        ):
+            _parse_proc_cpuinfo_mhz_map()
         logger.debug.assert_called_once()
         assert "MHz fallback" in logger.debug.call_args[0][0]

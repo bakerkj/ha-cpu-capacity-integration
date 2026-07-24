@@ -10,9 +10,9 @@ from custom_components.cpu_capacity.config_flow import (
     _publish_error,
 )
 from custom_components.cpu_capacity.const import (
-    CONF_PUBLISH_INTERVAL_15M_SECONDS,
     CONF_PUBLISH_INTERVAL_1M_SECONDS,
     CONF_PUBLISH_INTERVAL_5M_SECONDS,
+    CONF_PUBLISH_INTERVAL_15M_SECONDS,
     CONF_PUBLISH_INTERVAL_SECONDS,
     CONF_SAMPLE_INTERVAL_SECONDS,
     DEFAULT_PUBLISH_INTERVAL_SECONDS,
@@ -20,7 +20,6 @@ from custom_components.cpu_capacity.const import (
     resolve_publish_interval,
 )
 from custom_components.cpu_capacity.sensor import _window_for_metric
-
 
 # ---------------------------------------------------------------------------
 # resolve_publish_interval
