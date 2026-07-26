@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.9](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.8...v0.0.9) (2026-07-26)
+
+
+### Miscellaneous Chores
+
+* **deps:** update anthropics/claude-code-action action to v1.0.183 ([#75](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/75)) ([3231f35](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/3231f35f6ccc98b9c5b4cc9327c7a8b96e5d3a74))
+
+
+### Continuous Integration
+
+* validate manifest via hassfest, drop core-schema pre-commit hook ([#77](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/77)) ([23d2b8d](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/23d2b8ddba002cb754f5c28057540bd36c1c99d8))
+
 ## [0.0.8](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.7...v0.0.8) (2026-07-24)
 
 
