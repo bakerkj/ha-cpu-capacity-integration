@@ -1,13 +1,13 @@
 {
   "domain": "cpu_capacity",
   "name": "CPU Capacity",
-  "version": "0.0.8",
-  "config_flow": true,
-  "documentation": "https://github.com/bakerkj/ha-cpu-capacity-integration",
-  "issue_tracker": "https://github.com/bakerkj/ha-cpu-capacity-integration/issues",
-  "integration_type": "hub",
-  "iot_class": "local_polling",
   "codeowners": [
     "@bakerkj"
-  ]
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/bakerkj/ha-cpu-capacity-integration",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/bakerkj/ha-cpu-capacity-integration/issues",
+  "version": "0.0.8"
 }

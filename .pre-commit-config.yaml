@@ -117,9 +117,3 @@ repos:
         args:
           - --schemafile
           - https://docs.renovatebot.com/renovate-schema.json
-      - id: check-jsonschema
-        name: Validate Home Assistant integration manifest schema (remote)
-        files: ^ha-cpu-capacity-integration/custom_components/cpu_capacity/manifest.json$
-        args:
-          - --schemafile
-          - https://raw.githubusercontent.com/home-assistant/core/refs/heads/dev/script/json_schemas/manifest_schema.json
