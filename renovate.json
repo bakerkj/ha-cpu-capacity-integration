@@ -79,14 +79,31 @@
       "automerge": true
     },
     {
-      "description": "CI runner images.",
-      "matchDatasources": ["github-runners"],
-      "matchUpdateTypes": ["minor", "patch", "pin"],
+      "description": "npm packages pinned in .pre-commit-config.yaml additional_dependencies. These come from the custom regex manager, which renovate names custom.regex, so the pre-commit rule above does not reach them.",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "3 days",
       "automerge": true
     },
     {
-      "description": "Dev-group tooling (pytest-hacc, mypy) and the uv pin. Safe only because manifest.json requirements is empty; repos that ship runtime deps deny those by name after this. Both manager names are listed because sibling repos use each and both validate.",
+      "description": "CI runner images.",
+      "matchDatasources": ["github-runners"],
+      "matchUpdateTypes": ["minor", "patch", "pin"],
+      "minimumReleaseAge": "3 days",
+      "automerge": true
+    },
+    {
+      "description": "Dev-group tooling (pytest-hacc, mypy) from the native manager. Safe only because manifest.json requirements is empty; repos that ship runtime deps deny those by name after this. Both manager names are listed because sibling repos use each and both validate.",
       "matchManagers": ["pep621", "uv"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "3 days",
+      "automerge": true
+    },
+    {
+      "description": "The uv required-version pin in [tool.uv], which comes from the custom regex manager rather than the native pep621/uv managers and so is not covered by the rule above. Scoped by depName so it does not sweep in the other custom.regex managers.",
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["uv"],
       "matchUpdateTypes": ["minor", "patch"],
       "minimumReleaseAge": "3 days",
       "automerge": true
