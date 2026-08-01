@@ -97,5 +97,5 @@
       "automerge": false
     }
   ],
-  "prConcurrentLimit": 3
+  "prConcurrentLimit": 5
 }
