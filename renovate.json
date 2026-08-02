@@ -102,7 +102,7 @@
       "matchDepTypes": ["dependency-groups", "tool.uv.dev-dependencies"]
     },
     {
-      "description": "The uv required-version pin in [tool.uv], which comes from the custom regex manager rather than the native pep621/uv managers and so is not covered by the rule above. Scoped by depName so it does not sweep in the other custom.regex managers.",
+      "description": "The uv required-version pin in [tool.uv], which comes from the custom regex manager rather than the native pep621 manager and so is not covered by the rule above. Scoped by depName so it does not sweep in the other custom.regex managers.",
       "matchManagers": ["custom.regex"],
       "matchDepNames": ["uv"],
       "matchUpdateTypes": ["minor", "patch"],
