@@ -114,5 +114,6 @@
       "automerge": false
     }
   ],
-  "prConcurrentLimit": 5
+  "prConcurrentLimit": 5,
+  "automergeStrategy": "squash"
 }
