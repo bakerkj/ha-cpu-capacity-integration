@@ -20,5 +20,5 @@ mypy_path = ["custom_components"]
 asyncio_mode = "auto"
 
 [tool.uv]
-required-version = "==0.12.2"
+required-version = "==0.12.3"
 package = false
