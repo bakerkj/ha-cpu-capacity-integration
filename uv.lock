@@ -896,7 +896,7 @@ wheels = [
 
 [[package]]
 name = "ha-cpu-capacity-integration"
-version = "0.0.9"
+version = "0.0.10"
 source = { virtual = "." }
 
 [package.dev-dependencies]
