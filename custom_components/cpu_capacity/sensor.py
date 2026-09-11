@@ -14,11 +14,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfFrequency
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfFrequency,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import CpuCapacityEntryData
 from .const import DOMAIN, PRIMARY_WINDOW, SUMMARY_SENSOR_NAME
@@ -32,6 +38,99 @@ from .coordinator import (
 @dataclass(frozen=True, kw_only=True)
 class CpuMetricDescription(SensorEntityDescription):
     metric_key: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class LagMetricDescription(SensorEntityDescription):
+    lag_key: str  # key into EventLoopLagData
+
+
+@dataclass(frozen=True, kw_only=True)
+class LoopStallDescription(SensorEntityDescription):
+    stall_key: str  # key into EventLoopLagData (stall_count/last_stall_ms/…)
+
+
+def _lag_desc(
+    key: str, lag_key: str, name: str, *, enabled: bool = True
+) -> LagMetricDescription:
+    return LagMetricDescription(
+        key=key,
+        lag_key=lag_key,
+        name=name,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:timer-alert-outline",
+        suggested_display_precision=1,
+        entity_registry_enabled_default=enabled,
+    )
+
+
+# p95 per window (like the load averages) + a spike-catching max. Average is
+# omitted deliberately: lag averages sit on the ~ms timer floor and hide spikes.
+# Names omit "Event Loop" — the device already provides it (has_entity_name),
+# so the friendly name is "Event Loop Lag …" and the id is sensor.event_loop_lag…
+_LAG_DESCRIPTIONS: tuple[LagMetricDescription, ...] = (
+    _lag_desc("event_loop_lag", "current_ms", "Lag"),
+    _lag_desc("event_loop_lag_p95_1m", "p95_1m_ms", "Lag p95 1m"),
+    _lag_desc("event_loop_lag_p95_5m", "p95_5m_ms", "Lag p95 5m"),
+    _lag_desc("event_loop_lag_p95_15m", "p95_15m_ms", "Lag p95 15m"),
+    _lag_desc("event_loop_lag_max_5m", "max_5m_ms", "Lag max 5m"),
+    _lag_desc("event_loop_lag_max_1m", "max_1m_ms", "Lag max 1m", enabled=False),
+    _lag_desc("event_loop_lag_max_15m", "max_15m_ms", "Lag max 15m", enabled=False),
+)
+
+
+# Loop stalls: serious freezes (a lag sample over STALL_THRESHOLD_MS), distinct
+# from the routine drift the lag percentiles track. Cumulative since startup.
+_STALL_DESCRIPTIONS: tuple[LoopStallDescription, ...] = (
+    LoopStallDescription(
+        key="event_loop_stalls",
+        stall_key="stall_count",
+        name="Stalls",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:alert-octagon-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LoopStallDescription(
+        key="event_loop_last_stall",
+        stall_key="last_stall_ms",
+        name="Last stall",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:timer-alert-outline",
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LoopStallDescription(
+        key="event_loop_worst_stall",
+        stall_key="worst_stall_ms",
+        name="Worst stall",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:timer-alert-outline",
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LoopStallDescription(
+        key="event_loop_last_stall_time",
+        stall_key="last_stall_epoch",
+        name="Last stall time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:clock-alert-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
+def _instance_device_info(entry_id: str) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{entry_id}_instance")},
+        name="Event Loop",
+        manufacturer="Home Assistant",
+        model="Event-loop latency",
+    )
 
 
 def _build_descriptions(
@@ -286,6 +385,78 @@ class CpuCapacitySummarySensor(CpuCapacityBaseSensor):
         return attributes
 
 
+class EventLoopLagSensor(CoordinatorEntity[CpuCapacityCoordinator], SensorEntity):
+    """Instance-level asyncio event-loop lag (not per-CPU)."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    entity_description: LagMetricDescription
+
+    def __init__(
+        self,
+        entry_id: str,
+        coordinator: CpuCapacityCoordinator,
+        description: LagMetricDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = _instance_device_info(entry_id)
+
+    @property
+    def native_value(self) -> Any:
+        data = self.coordinator.data
+        lag = data.get("event_loop_lag") if data else None
+        if not lag:
+            return None
+        value = lag.get(self.entity_description.lag_key)
+        return round(value, 1) if isinstance(value, (int, float)) else None
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.native_value is not None
+
+
+class EventLoopStallSensor(CoordinatorEntity[CpuCapacityCoordinator], SensorEntity):
+    """Cumulative loop-stall stats (count / last / worst / time).
+
+    Unlike the lag sensors these stay available from startup: the count reads 0
+    until the first stall, and the duration/time read unknown until then.
+    """
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    entity_description: LoopStallDescription
+
+    def __init__(
+        self,
+        entry_id: str,
+        coordinator: CpuCapacityCoordinator,
+        description: LoopStallDescription,
+    ) -> None:
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = _instance_device_info(entry_id)
+
+    @property
+    def native_value(self) -> Any:
+        data = self.coordinator.data
+        lag = data.get("event_loop_lag") if data else None
+        if not lag:
+            return None
+        value = lag.get(self.entity_description.stall_key)
+        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
+            return (
+                dt_util.utc_from_timestamp(value)
+                if isinstance(value, (int, float))
+                else None
+            )
+        if self.entity_description.stall_key == "stall_count":
+            return value  # int, present from startup (0+)
+        return round(value, 0) if isinstance(value, (int, float)) else None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -298,6 +469,18 @@ async def async_setup_entry(
     supports_epb = entry_data.sampler.supports_epb
 
     entities: list[SensorEntity] = []
+
+    # Instance-level event-loop lag sensors (global, follow the primary window).
+    lag_coordinator = coordinators[PRIMARY_WINDOW]
+    for lag_description in _LAG_DESCRIPTIONS:
+        entities.append(
+            EventLoopLagSensor(entry.entry_id, lag_coordinator, lag_description)
+        )
+    for stall_description in _STALL_DESCRIPTIONS:
+        entities.append(
+            EventLoopStallSensor(entry.entry_id, lag_coordinator, stall_description)
+        )
+
     for cpu in entry_data.sampler.cpu_ids:
         entities.append(
             CpuCapacitySummarySensor(entry.entry_id, coordinators[PRIMARY_WINDOW], cpu)

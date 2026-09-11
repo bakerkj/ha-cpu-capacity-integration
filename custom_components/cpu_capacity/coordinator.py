@@ -31,6 +31,16 @@ WINDOW_SECONDS: dict[str, float] = {
     "15m": 900.0,
 }
 
+# Event-loop lag is sampled fast (on the loop) to catch sub-second stalls.
+LAG_SAMPLE_INTERVAL_SECONDS = 0.25
+
+# A lag sample at or above this is counted as a "stall": a serious loop freeze
+# (over a second) worth its own count/duration/time sensors, as opposed to the
+# routine sub-second drift the lag percentiles already track. Because the probe
+# fires late, a GIL-held freeze still shows up here as one large sample once the
+# loop resumes, so stalls are captured regardless of cause.
+STALL_THRESHOLD_MS = 1000.0
+
 
 class CpuSnapshot(TypedDict):
     supports_capacity_adjusted: bool
@@ -48,12 +58,28 @@ class CpuSnapshot(TypedDict):
     capacity_adjusted_load_pct_15m: float | None
 
 
+class EventLoopLagData(TypedDict):
+    current_ms: float | None
+    p95_1m_ms: float | None
+    p95_5m_ms: float | None
+    p95_15m_ms: float | None
+    max_1m_ms: float | None
+    max_5m_ms: float | None
+    max_15m_ms: float | None
+    # Loop-stall stats (samples >= STALL_THRESHOLD_MS): cumulative since start.
+    stall_count: int
+    last_stall_ms: float | None
+    worst_stall_ms: float | None
+    last_stall_epoch: float | None  # wall-clock time.time() of the last stall
+
+
 class CoordinatorSnapshot(TypedDict):
     sample_count: int
     last_sample_epoch: float
     sample_interval_seconds: float
     publish_intervals_by_window: dict[str, float]
     cpus: dict[int, CpuSnapshot]
+    event_loop_lag: EventLoopLagData | None
 
 
 class RollingWindow:
@@ -103,6 +129,106 @@ class CpuRollingAverages:
         if rolling is None:
             return None
         return rolling.mean()
+
+
+def _percentile(sorted_vals: list[float], pct: float) -> float:
+    """Nearest-rank percentile of an already-sorted, non-empty list."""
+    n = len(sorted_vals)
+    k = min(n - 1, max(0, math.ceil(pct / 100.0 * n) - 1))
+    return sorted_vals[k]
+
+
+class EventLoopLagMonitor:
+    """Measures asyncio event-loop scheduling drift (loop lag).
+
+    Re-arms a probe every ``interval``; the gap between the probe's deadline and
+    when the loop actually runs it is the lag — i.e. how long a ready callback
+    waited. Runs entirely on the loop, so the sample deque is single-threaded;
+    ``compute`` must also be called on the loop.
+    """
+
+    def __init__(
+        self, hass: HomeAssistant, interval: float = LAG_SAMPLE_INTERVAL_SECONDS
+    ) -> None:
+        self.hass = hass
+        self._interval = max(0.05, float(interval))
+        maxlen = max(1, math.ceil(WINDOW_SECONDS["15m"] / self._interval))
+        self._samples: deque[float] = deque(maxlen=maxlen)
+        self._expected: float | None = None
+        self._handle: asyncio.TimerHandle | None = None
+        self._running = False
+        # Cumulative loop-stall stats (samples >= STALL_THRESHOLD_MS).
+        self._stall_count = 0
+        self._last_stall_ms: float | None = None
+        self._worst_stall_ms: float | None = None
+        self._last_stall_epoch: float | None = None
+
+    @callback
+    def start(self) -> None:
+        if self._running:
+            return
+        self._running = True
+        self._arm()
+
+    @callback
+    def _arm(self) -> None:
+        self._expected = self.hass.loop.time() + self._interval
+        self._handle = self.hass.loop.call_later(self._interval, self._probe)
+
+    @callback
+    def _probe(self) -> None:
+        if not self._running:
+            return
+        now = self.hass.loop.time()
+        expected = self._expected if self._expected is not None else now
+        lag = max(0.0, now - expected)
+        self._samples.append(lag)
+        lag_ms = lag * 1000.0
+        if lag_ms >= STALL_THRESHOLD_MS:
+            self._stall_count += 1
+            self._last_stall_ms = lag_ms
+            self._last_stall_epoch = time.time()
+            self._worst_stall_ms = (
+                lag_ms
+                if self._worst_stall_ms is None
+                else max(self._worst_stall_ms, lag_ms)
+            )
+        self._arm()
+
+    @callback
+    def stop(self) -> None:
+        self._running = False
+        if self._handle is not None:
+            self._handle.cancel()
+            self._handle = None
+
+    @callback
+    def compute(self) -> EventLoopLagData:
+        data = list(self._samples)
+
+        def agg(seconds: float) -> tuple[float | None, float | None]:
+            if not data:
+                return None, None
+            n = min(len(data), max(1, math.ceil(seconds / self._interval)))
+            window = sorted(data[-n:])
+            return _percentile(window, 95.0) * 1000.0, window[-1] * 1000.0
+
+        p1, m1 = agg(WINDOW_SECONDS["1m"])
+        p5, m5 = agg(WINDOW_SECONDS["5m"])
+        p15, m15 = agg(WINDOW_SECONDS["15m"])
+        return EventLoopLagData(
+            current_ms=(data[-1] * 1000.0 if data else None),
+            p95_1m_ms=p1,
+            p95_5m_ms=p5,
+            p95_15m_ms=p15,
+            max_1m_ms=m1,
+            max_5m_ms=m5,
+            max_15m_ms=m15,
+            stall_count=self._stall_count,
+            last_stall_ms=self._last_stall_ms,
+            worst_stall_ms=self._worst_stall_ms,
+            last_stall_epoch=self._last_stall_epoch,
+        )
 
 
 def _safe_read_text(path: str) -> str | None:
@@ -312,6 +438,8 @@ class CpuCapacitySampler:
         self._running = False
         self._unsub_sample: CALLBACK_TYPE | None = None
         self._sample_task: asyncio.Task | None = None
+        # Event-loop lag runs on the loop (not the executor sampler above).
+        self._lag = EventLoopLagMonitor(hass)
 
     @property
     def cpu_ids(self) -> list[int]:
@@ -343,6 +471,7 @@ class CpuCapacitySampler:
 
         await self.hass.async_add_executor_job(self._initialize_sync)
         self._running = True
+        self._lag.start()
 
         @callback
         def _schedule_sample(_now: datetime) -> None:
@@ -362,6 +491,7 @@ class CpuCapacitySampler:
 
     async def async_stop(self) -> None:
         self._running = False
+        self._lag.stop()
 
         if self._unsub_sample is not None:
             self._unsub_sample()
@@ -384,7 +514,11 @@ class CpuCapacitySampler:
 
     async def async_get_snapshot(self) -> CoordinatorSnapshot:
         async with self._lock:
-            return await self.hass.async_add_executor_job(self._build_snapshot_sync)
+            snapshot = await self.hass.async_add_executor_job(self._build_snapshot_sync)
+        # Lag is computed here on the loop (its deque is loop-owned), not in the
+        # executor snapshot build above.
+        snapshot["event_loop_lag"] = self._lag.compute()
+        return snapshot
 
     def _initialize_sync(self) -> None:
         if not os.path.exists("/proc/stat"):
@@ -490,6 +624,7 @@ class CpuCapacitySampler:
             sample_interval_seconds=self._sample_interval_seconds,
             publish_intervals_by_window=dict(self._publish_intervals_by_window),
             cpus=cpu_data,
+            event_loop_lag=None,  # filled on the loop in async_get_snapshot
         )
 
 
