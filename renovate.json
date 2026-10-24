@@ -119,7 +119,6 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 6pm on friday"],
-    "automerge": true,
-    "minimumReleaseAge": "3 days"
+    "automerge": true
   }
 }
