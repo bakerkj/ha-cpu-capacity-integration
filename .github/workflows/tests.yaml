@@ -16,7 +16,9 @@ jobs:
           cache-suffix: tests
       - name: Verify uv.lock matches pyproject.toml
         run: uv lock --check
+      # --no-default-groups: uv treats `dev` as a default group, so plain
+      # `--group test` would still pull mypy into the test matrix.
       - name: Install the locked environment
-        run: uv sync --group test --frozen
+        run: uv sync --no-default-groups --group test --frozen
       - name: Unit tests
         run: uv run --no-sync python -m pytest tests/ -v
