@@ -14,5 +14,9 @@ jobs:
         with:
           enable-cache: true
           cache-suffix: tests
-      - run: uv sync --group test
-      - run: uv run python -m pytest tests/ -v
+      - name: Verify uv.lock matches pyproject.toml
+        run: uv lock --check
+      - name: Install the locked environment
+        run: uv sync --group test --frozen
+      - name: Unit tests
+        run: uv run --no-sync python -m pytest tests/ -v
