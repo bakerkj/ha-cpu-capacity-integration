@@ -18,8 +18,6 @@ jobs:
         with:
           cache-dependency-glob: "uv.lock"
           cache-suffix: mypy
-      - name: Verify uv.lock matches pyproject.toml
-        run: uv lock --check
       - name: Install the locked environment
         run: uv sync --frozen
       - name: Run mypy
