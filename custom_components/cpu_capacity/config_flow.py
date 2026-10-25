@@ -6,10 +6,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
+
+try:
+    # HA 2026.9 replaced voluptuous with the API-compatible probatio and types
+    # schemas as probatio; build ours with whichever this HA ships.
+    import probatio as vol
+except ImportError:  # HA < 2026.9
+    import voluptuous as vol  # type: ignore[no-redef]
 
 from .const import (
     CONF_SAMPLE_INTERVAL_SECONDS,

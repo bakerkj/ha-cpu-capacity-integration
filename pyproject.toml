@@ -6,7 +6,10 @@ dependencies = []
 
 [dependency-groups]
 test = [
-  "pytest-homeassistant-custom-component>=0.13.323",
+  # Pinned exactly: the plugin pins homeassistant exactly, so this IS the HA
+  # under test. A `>=` floor never changes, so Renovate never bumps it and the
+  # lock silently stays on whatever HA it first resolved.
+  "pytest-homeassistant-custom-component==0.13.375",
 ]
 dev = [
   { include-group = "test" },
