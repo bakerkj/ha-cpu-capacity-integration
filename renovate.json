@@ -115,5 +115,10 @@
     }
   ],
   "prConcurrentLimit": 5,
-  "automergeStrategy": "squash"
+  "automergeStrategy": "squash",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6pm on friday"],
+    "automerge": false
+  }
 }
