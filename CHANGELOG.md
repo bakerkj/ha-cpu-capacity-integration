@@ -1,5 +1,66 @@
 # Changelog
 
+## [0.0.11](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.10...v0.0.11) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** pin the HA test plugin so the locked HA tracks releases ([#153](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/153)) ([c69c8ef](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/c69c8efcea448d7995e3693dfed6b83d41c2e325))
+* **renovate:** don't duplicate runs-on detection with the built-in manager ([#117](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/117)) ([c76ce58](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/c76ce5842ce30030b463d10979fbe7e68bf57e4d))
+
+
+### Miscellaneous Chores
+
+* **ci:** standardize uv usage across workflows ([#152](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/152)) ([63323da](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/63323da03b742416cd9f5ff9c11e45a2baa6f88b))
+* **deps:** lock file maintenance ([#154](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/154)) ([f301f3f](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/f301f3ff176c0dce5d6c83a21afebf42758015c8))
+* **deps:** lock file maintenance ([#158](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/158)) ([838c95b](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/838c95b66a431d35a3ce21f3712946e543f55131))
+* **deps:** lock file maintenance ([#159](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/159)) ([9119238](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/91192388d911d5285061689fa66bc739ffcc241c))
+* **deps:** lock file maintenance ([#160](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/160)) ([7d5f9f4](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/7d5f9f437f8fade99ebe5a96cb66a9e1ae828b14))
+* **deps:** lock file maintenance ([#162](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/162)) ([f3c1f92](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/f3c1f9201eeee6d70060d7817a0e970238c21e19))
+* **deps:** update anthropics/claude-code-action action to v1.0.225 ([#114](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/114)) ([41f14db](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/41f14db66f3a304faecf040330930fa60e948ea8))
+* **deps:** update anthropics/claude-code-action action to v1.0.226 ([#124](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/124)) ([81e7502](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/81e75028e717384ba446f281202514f10edf6d60))
+* **deps:** update anthropics/claude-code-action action to v1.0.236 ([#127](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/127)) ([e6a4327](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/e6a4327391b6f4944cc3560f33c962c959905e91))
+* **deps:** update anthropics/claude-code-action action to v1.0.244 ([#135](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/135)) ([67bf32d](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/67bf32d234191471783b3da66a273c52ecd48c03))
+* **deps:** update anthropics/claude-code-action action to v1.0.255 ([#147](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/147)) ([f3a88cf](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/f3a88cfaa7cb7c4a9f36d68f718661ce3afcd4cc))
+* **deps:** update anthropics/claude-code-action action to v1.0.263 ([#155](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/155)) ([513b47b](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/513b47bef958db268ba39b92f57e38a24c4e1701))
+* **deps:** update dependency ubuntu to v26 ([#119](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/119)) ([feaddaa](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/feaddaabdf216c07221a1017345be26e35cc1667))
+* **deps:** update dependency uv to v0.12.14 ([#115](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/115)) ([55a1729](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/55a17296b0ad019f6ed4c06a763c459c101b3bc0))
+* **deps:** update dependency uv to v0.12.15 ([#121](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/121)) ([8ed9bf9](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/8ed9bf925552a8ed9ba265533ba230eb0d535d93))
+* **deps:** update dependency uv to v0.12.17 ([#123](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/123)) ([d88d875](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/d88d875a735ae0495a1e612dcc603fa2b9b9f7c7))
+* **deps:** update dependency uv to v0.12.20 ([#128](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/128)) ([bc916a5](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/bc916a5589685e21dc28d3d1c89ac8967e44fccb))
+* **deps:** update dependency uv to v0.12.23 ([#130](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/130)) ([3925e2f](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/3925e2f8424f2a30cd5e04eac819b9872c9a7be3))
+* **deps:** update dependency uv to v0.13.0 ([#133](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/133)) ([3560a79](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/3560a79373b8fa8f8ef6c8360f865da36b03fd36))
+* **deps:** update dependency uv to v0.13.1 ([#141](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/141)) ([e858529](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/e85852994b7129c65a112e0a8ee281d9a29653d8))
+* **deps:** update dependency uv to v0.13.3 ([#143](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/143)) ([8524dde](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/8524dde5d557750eac7c63a20452bf0eec0c885b))
+* **deps:** update dependency uv to v0.13.4 ([#146](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/146)) ([2680989](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/2680989c50898e2185304aca1724847dc3530b07))
+* **deps:** update dependency uv to v0.13.5 ([#148](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/148)) ([060991a](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/060991a7bac1a7ff7ee38e97c566b14c35beacd4))
+* **deps:** update dependency uv to v0.13.6 ([#156](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/156)) ([d780480](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/d78048042de04a013a9b798229b260e097c1ee20))
+* **deps:** update github-actions ([#125](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/125)) ([391f4a1](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/391f4a1290c6bd11fd5825d4f9877454015f2e44))
+* **deps:** update github-actions ([#131](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/131)) ([afdb5b6](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/afdb5b63ac8fd2c5d416864d670f0dbe02bf2164))
+* **deps:** update github-actions ([#137](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/137)) ([50f124c](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/50f124cbd10e7790f1e2228cd1079bcde79b5e96))
+* **deps:** update github-actions ([#142](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/142)) ([13c6b06](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/13c6b06aed78828165b18dad648b16e195fecd4b))
+* **deps:** update github-actions ([#144](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/144)) ([267cad2](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/267cad24713d5981a5b22c9e91a9a1d3a85df4e4))
+* **deps:** update github-actions ([#149](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/149)) ([69b6991](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/69b6991b5601d90f5595f159a1b1a0c3d1ba2f6c))
+* **deps:** update github-actions ([#161](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/161)) ([be505af](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/be505af3402e8da14447bae141ffb598585b5268))
+* **deps:** update j178/prek-action action to v3.1.0 ([#145](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/145)) ([5f8cdbb](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/5f8cdbb836b8d773dad25d57ebdfbdb883137e38))
+* **deps:** update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.27.0 ([#126](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/126)) ([eefb062](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/eefb062e273b2d7eb3498af9e03ed8640d730cd1))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.16.10 ([#132](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/132)) ([7f4d763](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/7f4d7636225fb6b9f4452e62dc6c2add3f0a9b81))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.0 ([#134](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/134)) ([23ed01c](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/23ed01ca5e6b74d03aa576fb4ee3be12455c686d))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.1 ([#140](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/140)) ([731c790](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/731c7906f78746e012ebce239abcd19626169328))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.2 ([#150](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/150)) ([19a48b9](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/19a48b981114b04401c144af4a6bbeb192602138))
+* **deps:** update pre-commit hook rbubley/mirrors-prettier to v3.9.10 ([#138](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/138)) ([16d9aa5](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/16d9aa5388c156204fe7c7e617a46d4fdec8beff))
+* **deps:** update pre-commit hook rbubley/mirrors-prettier to v3.9.7 ([#120](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/120)) ([55c8aa8](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/55c8aa88dcccce9c85ba97176d006722195156d1))
+* **deps:** update pre-commit hooks ([#122](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/122)) ([e93add0](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/e93add080e9f20e8187c06f5c9c15b654b2d1cba))
+* **deps:** update pre-commit hooks ([#129](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/129)) ([99b859a](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/99b859adc0d7a347fd7657ff86c219de6ed4eb40))
+* **deps:** update pre-commit hooks ([#157](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/157)) ([d58a759](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/d58a759a2f8c701da9913fb16c7b6a5ba6cdc3e5))
+* **renovate:** enable lockFileMaintenance ([#151](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/151)) ([0aca5b2](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/0aca5b2a8288fa2dbc1e630a59b0640e681c6035))
+* switch actionlint pre-commit hook from rhysd (stale) to kjanat fork ([#118](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/118)) ([87ba3fb](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/87ba3fb1a637229e92150f1e609bfbf763cf2ee0))
+
+
+### Continuous Integration
+
+* **claude:** gate on-demand [@claude](https://github.com/claude) workflow to repo owner ([#136](https://github.com/bakerkj/ha-cpu-capacity-integration/issues/136)) ([d234f5c](https://github.com/bakerkj/ha-cpu-capacity-integration/commit/d234f5c90755d8d35305049f8886eb7414021284))
+
 ## [0.0.10](https://github.com/bakerkj/ha-cpu-capacity-integration/compare/v0.0.9...v0.0.10) (2026-09-11)
 
 
